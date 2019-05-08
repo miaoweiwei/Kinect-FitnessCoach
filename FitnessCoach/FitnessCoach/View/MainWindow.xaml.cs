@@ -13,6 +13,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml;
+using FitnessCoach.BoneNode;
 using FitnessCoach.Util;
 using Microsoft.Kinect;
 
@@ -23,6 +25,8 @@ namespace FitnessCoach
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        private bool _isRecord;
+
         #region 有关UI的字段
 
         /// <summary>
@@ -129,7 +133,7 @@ namespace FitnessCoach
                 this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StatusText"));
             }
         }
-        
+
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
             if (this.bodyFrameReader != null)
@@ -138,7 +142,7 @@ namespace FitnessCoach
             if (this.colorFrameReader != null)
                 this.colorFrameReader.FrameArrived += ColorFrameReader_FrameArrived;
         }
-        
+
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
         {
             if (this.bodyFrameReader != null)
@@ -188,7 +192,7 @@ namespace FitnessCoach
             // 创建要显示的位图
             this._colorBitmapSource = new WriteableBitmap(colorFrameDescription.Width, colorFrameDescription.Height,
                 96.0, 96.0, PixelFormats.Bgr32, null);
-            
+
             if (!this.kinectSensor.IsAvailable)
             {
                 this.kinectSensor.Open();
@@ -218,7 +222,6 @@ namespace FitnessCoach
                     bodyFrame.GetAndRefreshBodyData(this.bodies);
                 }
 
-
                 dataReceived = true; //数据接收成功
             }
 
@@ -228,9 +231,11 @@ namespace FitnessCoach
                 dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
 
                 this.skeleton.DrawBodyArr(this.bodies, dc);
-                
+
                 this.drawingGroup.ClipGeometry =
                     new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
+
+                this.RecordJointAngle(this.bodies);
             }
         }
 
@@ -263,12 +268,23 @@ namespace FitnessCoach
                 }
             }
         }
-        
+
         private void BtnStartRecording_OnClick(object sender, RoutedEventArgs e)
         {
-            //开始录制节点角度信息
-            //TODO 开始录制节点角度信息
+            _isRecord = !_isRecord;
+            BtnStartRecording.Content = _isRecord ? "停止记录节点角度" : "记录节点角度";
+        }
 
+        private void RecordJointAngle(Body[] bodies)
+        {
+            Dictionary<JointType, float> jointAngleDIc = new Dictionary<JointType, float>();
+            foreach (Body body in bodies)
+            {
+                if (body.IsTracked)
+                {
+                    jointAngleDIc = Skeleton.GetBodyJointAngleDic(body.Joints);
+                }
+            }
         }
     }
 }

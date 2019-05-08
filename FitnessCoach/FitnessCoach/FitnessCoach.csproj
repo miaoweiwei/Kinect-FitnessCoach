@@ -60,9 +60,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BoneNode\JointAngle.cs" />
+    <Compile Include="BoneNode\KeyBone.cs" />
+    <Compile Include="Core\BodyJointAngle.cs" />
     <Compile Include="Core\CoreModel.cs" />
-    <Compile Include="Util\Bone.cs" />
-    <Compile Include="Util\Skeleton.cs" />
+    <Compile Include="BoneNode\Bone.cs" />
+    <Compile Include="Util\SerializationHelp.cs" />
+    <Compile Include="BoneNode\Skeleton.cs" />
     <Page Include="View\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

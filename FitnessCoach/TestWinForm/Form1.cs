@@ -7,7 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using FitnessCoach.BoneNode;
 using FitnessCoach.Util;
+using Microsoft.Kinect;
 
 namespace TestWinForm
 {
@@ -20,8 +22,20 @@ namespace TestWinForm
 
         private void button1_Click(object sender, EventArgs e)
         {
-            SpeechHelp speech=SpeechHelp.GetInstance();
+            SpeechHelp speech = SpeechHelp.GetInstance();
             speech.Speak("In a member-led church, all of the members in the congregation generall", true);
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            JointAngle joint = new JointAngle()
+            {
+                Name = JointType.AnkleLeft,
+                Angle = 45.6456f,
+            };
+
+            string serializationStr = SerializationHelp.Serializer(joint);
+            JointAngle obj = SerializationHelp.Deserialize<JointAngle>(serializationStr);
         }
     }
 }
