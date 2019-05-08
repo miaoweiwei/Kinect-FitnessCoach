@@ -32,4 +32,4 @@ Normal(Z blue) - joint roll, perpendicular to the bone
 Binormal(X red) - perpendicular to the bone and norma
 　　比如对于肘关节和膝关节来说，只有一个转动自由度，因此Z轴（平行于冠状轴）朝向身体的两侧，关节带动骨骼绕着Z轴旋转，如下图所示：
 
-![avatar](/Kinect2.0_Joint_Coordinates.png)
+![image](/Kinect-FitnessCoach/KinectDataFormat/Kinect2.0_Joint_Coordinates.png)
