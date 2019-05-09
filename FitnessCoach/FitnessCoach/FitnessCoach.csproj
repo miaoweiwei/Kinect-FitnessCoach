@@ -76,6 +76,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Util\SpeechHelp.cs" />
+    <Compile Include="Util\SpeechRecognition.cs" />
     <Compile Include="Util\VectorHelp.cs" />
     <Compile Include="View\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
