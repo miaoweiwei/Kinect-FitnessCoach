@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
+﻿using System.IO;
 using System.Xml.Serialization;
 
 namespace FitnessCoach.Util
@@ -31,7 +25,7 @@ namespace FitnessCoach.Util
         }
 
         /// <summary>
-        /// 序列化,没有无参的构造函数的对象不可以序列化，基础类型都不可以要放在对象里
+        /// 序列化,没有无参的构造函数的对象不可以序列化，基础类型都不可以,要放在对象里才可以
         /// </summary>
         /// <typeparam name="T">对象的类型</typeparam>
         /// <param name="t">对象</param>

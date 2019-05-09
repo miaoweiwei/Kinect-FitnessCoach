@@ -234,7 +234,7 @@ namespace FitnessCoach
 
                 this.drawingGroup.ClipGeometry =
                     new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
-
+                if(this._isRecord)
                 this.RecordJointAngle(this.bodies);
             }
         }

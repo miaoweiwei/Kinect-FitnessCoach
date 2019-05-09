@@ -62,7 +62,7 @@
     </ApplicationDefinition>
     <Compile Include="BoneNode\JointAngle.cs" />
     <Compile Include="BoneNode\KeyBone.cs" />
-    <Compile Include="Core\BodyJointAngle.cs" />
+    <Compile Include="Core\AttitudeModel.cs" />
     <Compile Include="Core\CoreModel.cs" />
     <Compile Include="BoneNode\Bone.cs" />
     <Compile Include="Util\SerializationHelp.cs" />
@@ -112,7 +112,10 @@
     <None Include="Resources\autorun.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Model\model1.xml" />
+    <None Include="Model\RaiseLeftHand.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

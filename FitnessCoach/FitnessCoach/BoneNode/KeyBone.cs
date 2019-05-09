@@ -15,7 +15,7 @@ namespace FitnessCoach.BoneNode
         /// <summary>
         /// 关键骨骼的名字
         /// </summary>
-        public JointType Name { get; set; }
+        public Bone Name { get; set; }
         /// <summary>
         /// 关键骨骼的向量
         /// </summary>

@@ -181,7 +181,7 @@ namespace FitnessCoach.BoneNode
                 }
 
                 this.DrawBody(joints3, jointPoints, dc, pen);
-                this.DrawBoneAngle(joints3, jointPoints, dc, pen);
+                this.DrawBoneAngle(joints3, jointPoints, dc, Brushes.Purple);
             }
         }
 
@@ -230,7 +230,7 @@ namespace FitnessCoach.BoneNode
         }
 
         /// <summary>
-        /// 画骨架
+        /// 画一个人的骨架
         /// </summary>
         /// <param name="joints3"></param>
         /// <param name="jointPoints"></param>
@@ -248,34 +248,7 @@ namespace FitnessCoach.BoneNode
             }
         }
 
-        /// <summary>
-        /// 显示角度
-        /// </summary>
-        public void DrawBoneAngle(IReadOnlyDictionary<JointType, Joint> joints3, IDictionary<JointType, Point> joints,
-            DrawingContext dc, Pen drawingPen)
-        {
-            //骨头字典
-            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = Skeleton.GetBoneDic();
-            //关节字典
-            Dictionary<JointType, Tuple<Bone, Bone>> jointDic = Skeleton.GetJointDic();
-            //关节的角度
-            Dictionary<JointType, float> bodyJointAngleDic = Skeleton.GetBodyJointAngleDic(joints3);
-            foreach (KeyValuePair<JointType, float> pair in bodyJointAngleDic)
-            {
-                Point point = joints[pair.Key];
-                // 基于设置的属性集创建格式化的文字。        
-                FormattedText formattedText = new FormattedText(
-                    pair.Value.ToString("f4"),//保留三位小数
-                    CultureInfo.GetCultureInfo("zh-cn"), //en-us 英文 zh-cn 中文
-                    FlowDirection.LeftToRight,
-                    new Typeface("Verdana"),
-                    5,
-                    Brushes.Red);
-                dc.DrawText(formattedText, point);
-            }
-        }
-
-        //画一个骨骼
+        //画一个骨头
         private void DrawBone(IReadOnlyDictionary<JointType, Joint> joints3, IDictionary<JointType, Point> jointPoints,
             JointType jointType0, JointType jointType1, DrawingContext drawingContext, Pen drawingPen)
         {
@@ -292,6 +265,33 @@ namespace FitnessCoach.BoneNode
                 drawPen = drawingPen; //跟踪到了就用当前的画笔
             //连接两个节点
             drawingContext.DrawLine(drawPen, jointPoints[jointType0], jointPoints[jointType1]);
+        }
+
+        /// <summary>
+        /// 显示角度
+        /// </summary>
+        public void DrawBoneAngle(IReadOnlyDictionary<JointType, Joint> joints3, IDictionary<JointType, Point> joints,
+            DrawingContext dc, Brush foreground)
+        {
+            //骨头字典
+            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = Skeleton.GetBoneDic();
+            //关节字典
+            Dictionary<JointType, Tuple<Bone, Bone>> jointDic = Skeleton.GetJointDic();
+            //关节的角度
+            Dictionary<JointType, float> bodyJointAngleDic = Skeleton.GetBodyJointAngleDic(joints3);
+            foreach (KeyValuePair<JointType, float> pair in bodyJointAngleDic)
+            {
+                Point point = joints[pair.Key];
+                // 基于设置的属性集创建格式化的文字。        
+                FormattedText formattedText = new FormattedText(
+                    pair.Value.ToString("f4"), //保留三位小数
+                    CultureInfo.GetCultureInfo("zh-cn"), //en-us 英文 zh-cn 中文
+                    FlowDirection.LeftToRight,
+                    new Typeface("Verdana"),
+                    5,
+                    Brushes.Red);
+                dc.DrawText(formattedText, point);
+            }
         }
 
         /// <summary>

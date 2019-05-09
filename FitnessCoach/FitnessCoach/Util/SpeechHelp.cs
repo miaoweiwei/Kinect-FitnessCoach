@@ -78,6 +78,7 @@ namespace FitnessCoach.Util
                 string voiceName = installedVoices.First(o => o.VoiceInfo.Culture.Name == "zh-CN").VoiceInfo.Name;
                 _speech.SelectVoice(voiceName);
             }
+
             _speech.Rate = 0;
             _speech.Volume = 100;
             _speech.SelectVoiceByHints(VoiceGender.Male, VoiceAge.Teen, 3, CultureInfo.CurrentCulture);
@@ -108,6 +109,7 @@ namespace FitnessCoach.Util
                 Debug.WriteLine("朗读完成!");
             }
         }
+
         /// <summary>
         /// 朗读，异步的时候触发朗读完成，同步的时候不触发
         /// </summary>
@@ -116,7 +118,11 @@ namespace FitnessCoach.Util
         public void Speak(string textToSpeak, bool isAsync = false)
         {
             if (isAsync)
+            {
+                //朗读之前取消之前没有朗读完或者没有朗读的队列
+                _speech.SpeakAsyncCancelAll();
                 _speech.SpeakAsync(textToSpeak);
+            }
             else
                 _speech.Speak(textToSpeak);
         }
