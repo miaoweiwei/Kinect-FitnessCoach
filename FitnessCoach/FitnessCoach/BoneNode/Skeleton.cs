@@ -21,15 +21,10 @@ namespace FitnessCoach.BoneNode
         /// </summary>
         private const double ClipBoundsThickness = 3;
 
-        private int displayWidth;
-        private int displayHeight;
-
-        private CoordinateMapper coordinateMapper = null;
-
         /// <summary>
         /// 用于将相机空间点的Z值钳制为负的常数
         /// </summary>
-        private const float InferredZPositionClamp = 0.1f;
+        private const float InferredZPositionClamp = 0.3f;
 
         /// <summary>
         /// 用于绘制当前推断的骨骼的笔
@@ -37,27 +32,49 @@ namespace FitnessCoach.BoneNode
         private readonly Pen inferredBonePen = new Pen(Brushes.Gray, 1);
 
         /// <summary>
-        /// 人体骨骼颜色列表，KInect最多识别6个人，所以共6中颜色
+        /// 显示骨骼时的页面宽度
         /// </summary>
-        public List<Pen> BodyColors = new List<Pen>()
+        public double DisplayWidth { get; set; }
+
+        /// <summary>
+        /// 显示骨骼时的页面高度
+        /// </summary>
+        public double DisplayHeight { get; set; }
+
+        /// <summary>
+        /// 骨骼的坐标系
+        /// </summary>
+        public CoordinateMapper CoordinateMapper { get; set; } = null;
+
+        /// <summary>
+        /// 骨骼的最大宽度
+        /// </summary>
+        public double BonePenMaxSize { get; set; } = 20;
+
+        /// <summary>
+        /// 人体骨骼颜色列表，Kinect最多识别6个人，所以共6中颜色
+        /// </summary>
+        public SolidColorBrush[] BodyBrushes { get; set; } = new SolidColorBrush[]
         {
-            new Pen(Brushes.Red, 3),
-            new Pen(Brushes.Orange, 3),
-            new Pen(Brushes.Green, 3),
-            new Pen(Brushes.Blue, 3),
-            new Pen(Brushes.Indigo, 3),
-            new Pen(Brushes.Violet, 3),
+            Brushes.Red,
+            Brushes.Orange,
+            Brushes.Green,
+            Brushes.Blue,
+            Brushes.Indigo,
+            Brushes.Violet,
         };
 
         public Skeleton(int displayWidth, int displayHeight, CoordinateMapper coordinateMapper)
         {
-            this.displayWidth = displayWidth;
-            this.displayHeight = displayHeight;
-            this.coordinateMapper = coordinateMapper;
+            this.DisplayWidth = displayWidth;
+            this.DisplayHeight = displayHeight;
+            this.CoordinateMapper = coordinateMapper;
         }
 
+
         /// <summary>
-        /// 返回骨骼字典，Key为骨骼的名字，value为骨骼的两端点
+        /// 返回骨骼字典，Key为骨骼的名字，value为骨骼的两端点，
+        /// <see cref="JointType.SpineMid"/> 为身体中间部位
         /// </summary>
         /// <returns></returns>
         public static Dictionary<Bone, Tuple<JointType, JointType>> GetBoneDic()
@@ -70,10 +87,7 @@ namespace FitnessCoach.BoneNode
                 {Bone.ThumbLeft, new Tuple<JointType, JointType>(JointType.ThumbLeft, JointType.WristLeft)},
                 {Bone.ArmLeft, new Tuple<JointType, JointType>(JointType.WristLeft, JointType.ElbowLeft)},
                 {Bone.BigArmLeft, new Tuple<JointType, JointType>(JointType.ElbowLeft, JointType.ShoulderLeft)},
-                {
-                    Bone.ShoulderLeft,
-                    new Tuple<JointType, JointType>(JointType.ShoulderLeft, JointType.SpineShoulder)
-                },
+                {Bone.ShoulderLeft, new Tuple<JointType, JointType>(JointType.ShoulderLeft, JointType.SpineShoulder)},
                 /***********************左边下肢骨骼***********************/
                 {Bone.FootLeft, new Tuple<JointType, JointType>(JointType.FootLeft, JointType.AnkleLeft)},
                 {Bone.LowerLegLeft, new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.KneeLeft)},
@@ -86,10 +100,7 @@ namespace FitnessCoach.BoneNode
                 {Bone.ThumbRight, new Tuple<JointType, JointType>(JointType.ThumbRight, JointType.WristRight)},
                 {Bone.ArmRight, new Tuple<JointType, JointType>(JointType.WristRight, JointType.ElbowRight)},
                 {Bone.BigArmRight, new Tuple<JointType, JointType>(JointType.ElbowRight, JointType.ShoulderRight)},
-                {
-                    Bone.ShoulderRight,
-                    new Tuple<JointType, JointType>(JointType.ShoulderRight, JointType.SpineShoulder)
-                },
+                {Bone.ShoulderRight, new Tuple<JointType, JointType>(JointType.ShoulderRight, JointType.SpineShoulder)},
                 /***********************右边下肢骨骼***********************/
                 {Bone.FootRight, new Tuple<JointType, JointType>(JointType.FootRight, JointType.AnkleRight)},
                 {Bone.LowerLegRight, new Tuple<JointType, JointType>(JointType.AnkleRight, JointType.KneeRight)},
@@ -148,9 +159,7 @@ namespace FitnessCoach.BoneNode
             for (int i = 0; i < bodies.Length; i++)
             {
                 Body body = bodies[i];
-                //设置画笔
-                Pen drawPen = this.BodyColors[i];
-                this.DrawBody(body, dc, drawPen);
+                this.DrawBody(body, i, dc);
             }
         }
 
@@ -158,30 +167,37 @@ namespace FitnessCoach.BoneNode
         /// 画出单个人的骨骼
         /// </summary>
         /// <param name="body"></param>
+        /// <param name="bodyIndex"></param>
         /// <param name="dc"></param>
-        /// <param name="pen"></param>
-        public void DrawBody(Body body, DrawingContext dc, Pen pen)
+        public void DrawBody(Body body, int bodyIndex, DrawingContext dc)
         {
             if (body.IsTracked) //判断这个人是不是已经被跟踪到
             {
                 this.DrawClippedEdges(body, dc); //画出边框
                 //获取骨骼节点的三维坐标
                 IReadOnlyDictionary<JointType, Joint> joints3 = body.Joints;
+                var asda = body.Lean;
                 //将关节点转换为2D深度（显示）空间
                 Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
-                foreach (JointType jointType in joints3.Keys) //将相机点映射到2D深度空间
+                foreach (JointType key in joints3.Keys) //将相机点映射到2D深度空间
                 {
                     //有时，推断关节的深度（Z）可能显示为负数
                     // 限制到0.1f以防止坐标映射器返回（-Infinity，-Infinity）
-                    CameraSpacePoint position = joints3[jointType].Position;
+                    CameraSpacePoint position = joints3[key].Position;
                     if (position.Z < 0) //深度为负值时
                         position.Z = InferredZPositionClamp;
-                    DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
-                    jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
+                    //DepthSpacePoint depthSpacePoint = this.CoordinateMapper.MapCameraPointToDepthSpace(position);
+                    //jointPoints[key] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
+                    ColorSpacePoint colorSpacePoint = CoordinateMapper.MapCameraPointToColorSpace(position);
+                    jointPoints[key] = new Point(colorSpacePoint.X, colorSpacePoint.Y);
                 }
 
-                this.DrawBody(joints3, jointPoints, dc, pen);
-                this.DrawBoneAngle(joints3, jointPoints, dc, Brushes.Purple);
+                CameraSpacePoint positionSpineMid = joints3[JointType.SpineMid].Position;
+                double num = positionSpineMid.Z;
+                //设置画笔
+                Pen drawPen = new Pen(this.BodyBrushes[bodyIndex], this.BonePenMaxSize / num);
+                this.DrawBody(joints3, jointPoints, dc, drawPen);
+                this.DrawBoneAngle(joints3, jointPoints, dc, Brushes.Black);
             }
         }
 
@@ -201,7 +217,7 @@ namespace FitnessCoach.BoneNode
                 drawingContext.DrawRectangle(
                     Brushes.Red,
                     null,
-                    new Rect(0, this.displayHeight - ClipBoundsThickness, this.displayWidth, ClipBoundsThickness));
+                    new Rect(0, this.DisplayHeight - ClipBoundsThickness, this.DisplayWidth, ClipBoundsThickness));
             }
 
             if (clippedEdges.HasFlag(FrameEdges.Top))
@@ -209,7 +225,7 @@ namespace FitnessCoach.BoneNode
                 drawingContext.DrawRectangle(
                     Brushes.Red,
                     null,
-                    new Rect(0, 0, this.displayWidth, ClipBoundsThickness));
+                    new Rect(0, 0, this.DisplayWidth, ClipBoundsThickness));
             }
 
             if (clippedEdges.HasFlag(FrameEdges.Left))
@@ -217,7 +233,7 @@ namespace FitnessCoach.BoneNode
                 drawingContext.DrawRectangle(
                     Brushes.Red,
                     null,
-                    new Rect(0, 0, ClipBoundsThickness, this.displayHeight));
+                    new Rect(0, 0, ClipBoundsThickness, this.DisplayHeight));
             }
 
             if (clippedEdges.HasFlag(FrameEdges.Right))
@@ -225,7 +241,7 @@ namespace FitnessCoach.BoneNode
                 drawingContext.DrawRectangle(
                     Brushes.Red,
                     null,
-                    new Rect(this.displayWidth - ClipBoundsThickness, 0, ClipBoundsThickness, this.displayHeight));
+                    new Rect(this.DisplayWidth - ClipBoundsThickness, 0, ClipBoundsThickness, this.DisplayHeight));
             }
         }
 
@@ -273,10 +289,6 @@ namespace FitnessCoach.BoneNode
         public void DrawBoneAngle(IReadOnlyDictionary<JointType, Joint> joints3, IDictionary<JointType, Point> joints,
             DrawingContext dc, Brush foreground)
         {
-            //骨头字典
-            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = Skeleton.GetBoneDic();
-            //关节字典
-            Dictionary<JointType, Tuple<Bone, Bone>> jointDic = Skeleton.GetJointDic();
             //关节的角度
             Dictionary<JointType, float> bodyJointAngleDic = Skeleton.GetBodyJointAngleDic(joints3);
             foreach (KeyValuePair<JointType, float> pair in bodyJointAngleDic)
@@ -288,7 +300,7 @@ namespace FitnessCoach.BoneNode
                     CultureInfo.GetCultureInfo("zh-cn"), //en-us 英文 zh-cn 中文
                     FlowDirection.LeftToRight,
                     new Typeface("Verdana"),
-                    5,
+                    10,
                     Brushes.Red);
                 dc.DrawText(formattedText, point);
             }

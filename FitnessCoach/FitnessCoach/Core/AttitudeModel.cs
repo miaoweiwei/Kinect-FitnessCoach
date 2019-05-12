@@ -9,7 +9,7 @@ namespace FitnessCoach.Core
 {
     /// <inheritdoc />
     /// <summary>
-    /// 姿态模帧
+    /// 一个姿态模型帧
     /// </summary>
     public class AttitudeModel : IDisposable
     {
@@ -18,15 +18,17 @@ namespace FitnessCoach.Core
         /// </summary>
         public string ActionName { get; set; }
 
+        public int Duration { get; set; } = 3000;
+
         /// <summary>
         /// 允许的关节角度误差，默认10度
         /// </summary>
-        public float AllowableAngularError { get; set; } = 10;
+        public float AllowableAngularError { get; set; } = 20;
 
         /// <summary>
         /// 关键骨骼向量与坐标轴的三个角度的允许误差，默认10度
         /// </summary>
-        public float AllowableKeyBoneError { get; set; } = 10;
+        public float AllowableKeyBoneError { get; set; } = 20;
 
         /// <summary>
         /// 关节列表,该动作的主要的关节角度，不是全身所有的关节
@@ -49,6 +51,7 @@ namespace FitnessCoach.Core
         {
             return Compared(jointAngleList, keyBoneList, this.AllowableAngularError, this.AllowableKeyBoneError);
         }
+
         /// <summary>
         /// 模型帧与目标帧做对比
         /// </summary>
@@ -61,7 +64,7 @@ namespace FitnessCoach.Core
             float allowableKeyBoneError)
         {
             foreach (JointAngle jointAngle in JointAngles)
-                if (jointAngle.Angle - jointAngleList.First(o => o.Name == jointAngle.Name).Angle >=
+                if (Math.Abs(jointAngle.Angle - jointAngleList.First(o => o.Name == jointAngle.Name).Angle) >=
                     allowableAngularError)
                     return false;
 
@@ -69,11 +72,11 @@ namespace FitnessCoach.Core
             foreach (var keyBone in KeyBones)
             {
                 KeyBone key = keyBoneList.First(o => o.Name == keyBone.Name);
-                if (keyBone.AngleX - key.AngleX >= allowableKeyBoneError)
+                if (Math.Abs(keyBone.AngleX - key.AngleX) >= allowableKeyBoneError)
                     return false;
-                if (keyBone.AngleY - key.AngleY >= allowableKeyBoneError)
+                if (Math.Abs(keyBone.AngleY - key.AngleY) >= allowableKeyBoneError)
                     return false;
-                if (keyBone.AngleZ - key.AngleZ >= allowableKeyBoneError)
+                if (Math.Abs(keyBone.AngleZ - key.AngleZ) >= allowableKeyBoneError)
                     return false;
             }
 

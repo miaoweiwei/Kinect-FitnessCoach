@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using FitnessCoach.Config;
 
 namespace FitnessCoach
 {
@@ -13,5 +14,15 @@ namespace FitnessCoach
     /// </summary>
     public partial class App : Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            GlobalConfig.Init();
+            base.OnStartup(e);
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            base.OnExit(e);
+        }
     }
 }

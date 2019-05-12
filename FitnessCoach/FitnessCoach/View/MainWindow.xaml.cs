@@ -15,6 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xml;
 using FitnessCoach.BoneNode;
+using FitnessCoach.Config;
 using FitnessCoach.Util;
 using Microsoft.Kinect;
 
@@ -97,6 +98,7 @@ namespace FitnessCoach
 
         public MainWindow()
         {
+            string path = Environment.CurrentDirectory;
             InitializeComponent();
             InitUi();
             InitKinect();
@@ -163,6 +165,7 @@ namespace FitnessCoach
             GC.Collect();
         }
 
+
         private void InitUi()
         {
             this.drawingGroup = new DrawingGroup();
@@ -171,15 +174,16 @@ namespace FitnessCoach
 
         private void InitKinect()
         {
-            this.kinectSensor = KinectSensor.GetDefault();
+            this.kinectSensor = GlobalConfig.Sensor;
             this.kinectSensor.IsAvailableChanged += KinectSensor_IsAvailableChanged;
             //获取坐标映射器
             this.coordinateMapper = this.kinectSensor.CoordinateMapper;
-            FrameDescription frameDescription = this.kinectSensor.DepthFrameSource.FrameDescription;
-            // get size of joint space 得到关节空间的大小
+            FrameDescription frameDescription = this.kinectSensor.ColorFrameSource.FrameDescription; //获取彩色图的分辨率
+            //得到关节空间的大小
             this.displayWidth = frameDescription.Width;
             this.displayHeight = frameDescription.Height;
-            skeleton = new Skeleton(displayWidth, displayHeight, coordinateMapper);
+            //设置骨骼空间的大小与彩色图像的一致，避免骨骼和彩色任务图像存在偏差
+            this.skeleton = new Skeleton(displayWidth, displayHeight, coordinateMapper);
 
             //为身体骨骼打开阅读器
             this.bodyFrameReader = this.kinectSensor.BodyFrameSource.OpenReader();
@@ -193,10 +197,7 @@ namespace FitnessCoach
             this._colorBitmapSource = new WriteableBitmap(colorFrameDescription.Width, colorFrameDescription.Height,
                 96.0, 96.0, PixelFormats.Bgr32, null);
 
-            if (!this.kinectSensor.IsAvailable)
-            {
-                this.kinectSensor.Open();
-            }
+            this.kinectSensor.Open();
 
             this.StatusText = "Kinect不可用!";
             this.DataContext = this;
@@ -211,38 +212,38 @@ namespace FitnessCoach
 
         private void BodyFrameReader_FrameArrived(object sender, BodyFrameArrivedEventArgs e)
         {
-            //TODO 接收到骨骼帧
             bool dataReceived = false;
             using (BodyFrame bodyFrame = e.FrameReference.AcquireFrame())
             {
                 if (bodyFrame != null) //重新初始化身体数组
                 {
-                    this.bodies = new Body[bodyFrame.BodyCount];
+                    if (this.bodies == null || this.bodies.Length < bodyFrame.BodyCount)
+                    {
+                        this.bodies = new Body[bodyFrame.BodyCount];
+                    }
+
                     //接收身体骨骼信息
                     bodyFrame.GetAndRefreshBodyData(this.bodies);
+                    dataReceived = true; //数据接收成功
                 }
-
-                dataReceived = true; //数据接收成功
             }
 
             if (!dataReceived) return;
             using (DrawingContext dc = this.drawingGroup.Open())
             {
-                dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
-
+                dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(0, byte.MaxValue, byte.MaxValue, byte.MaxValue)),
+                    null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 this.skeleton.DrawBodyArr(this.bodies, dc);
-
                 this.drawingGroup.ClipGeometry =
                     new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
-                if(this._isRecord)
-                this.RecordJointAngle(this.bodies);
+                
+                if (this._isRecord)
+                    this.RecordJointAngle(this.bodies);
             }
         }
 
         private void ColorFrameReader_FrameArrived(object sender, ColorFrameArrivedEventArgs e)
         {
-            //TODO 接收到彩色图像帧
-            // ColorFrame is IDisposable
             using (ColorFrame colorFrame = e.FrameReference.AcquireFrame())
             {
                 if (colorFrame != null)
@@ -255,7 +256,6 @@ namespace FitnessCoach
                         if ((colorFrameDescription.Width == this.ColorBitmapSource.PixelWidth) &&
                             (colorFrameDescription.Height == this.ColorBitmapSource.PixelHeight))
                         {
-                            // 把数据保存到  this._colorBitmapSource
                             colorFrame.CopyConvertedFrameDataToIntPtr(this.ColorBitmapSource.BackBuffer,
                                 (uint) (colorFrameDescription.Width * colorFrameDescription.Height * 4),
                                 ColorImageFormat.Bgra);
@@ -277,6 +277,7 @@ namespace FitnessCoach
 
         private void RecordJointAngle(Body[] bodies)
         {
+            //TODO 录制骨骼信息用于模型的识别
             Dictionary<JointType, float> jointAngleDIc = new Dictionary<JointType, float>();
             foreach (Body body in bodies)
             {
