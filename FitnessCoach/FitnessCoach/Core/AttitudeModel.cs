@@ -18,6 +18,9 @@ namespace FitnessCoach.Core
         /// </summary>
         public string ActionName { get; set; }
 
+        /// <summary>
+        /// 姿态保持时间
+        /// </summary>
         public int Duration { get; set; } = 3000;
 
         /// <summary>

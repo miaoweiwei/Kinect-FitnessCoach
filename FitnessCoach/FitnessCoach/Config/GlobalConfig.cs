@@ -19,17 +19,14 @@ namespace FitnessCoach.Config
         /// 模型文件的文件夹路径
         /// </summary>
         public static string ModelDirPath;
-
-
+        
         /// <summary>
         /// Kinect
         /// </summary>
         public static KinectSensor Sensor { get; private set; }
-
-        //public static WindowsPreview.Kinect.KinectSensor MySensor;
-
+        
         /// <summary>
-        /// 全局变初始化
+        /// 系统初始化
         /// </summary>
         public static void Init()
         {
@@ -53,19 +50,6 @@ namespace FitnessCoach.Config
                 var config = ConfigurationManager.OpenExeConfiguration(ConfigPath);
                 string modelPath = config.AppSettings.Settings["ModelDirPath"].Value;
                 ModelDirPath = string.IsNullOrEmpty(modelPath) ? appDomain.BaseDirectory + "Model" : modelPath;
-                //HistoryDataTimeout = int.Parse(config.AppSettings.Settings["historyDataTimeout"].Value);
-                //IasTimeout = int.Parse(config.AppSettings.Settings["IasTimeout"].Value);
-                //BasicPriceShowCount = int.Parse(config.AppSettings.Settings["MarketStreamShowCount"].Value);
-                //TradeDealShowCount = int.Parse(config.AppSettings.Settings["TradeDealShowCount"].Value);
-                //TfSpreadShowCount = int.Parse(config.AppSettings.Settings["TfSpreadShowCount"].Value);
-                //DatumRateShowCount = int.Parse(config.AppSettings.Settings["DatumRateShowCount"].Value);
-                //FixedRateBondFilter = config.AppSettings.Settings["FixedRateBondFilter"].Value;
-                //SkinStyle = config.AppSettings.Settings["SkinStyle"].Value;
-                //ExcelMaxShowCount = int.Parse(config.AppSettings.Settings["ExcelMaxShowCount"].Value);
-                //CdhUserName = config.AppSettings.Settings["CdhUserName"].Value;
-                //CdhPassword = config.AppSettings.Settings["CdhPassword"].Value;
-                //if ((config.AppSettings.Settings.AllKeys.Contains("RunMode")))
-                //{ RunMode = config.AppSettings.Settings["RunMode"].Value.ToUpper(); }
             }
             catch (Exception ex)
             {
@@ -76,9 +60,6 @@ namespace FitnessCoach.Config
         public static  void GlobalVariableInit()
         {
            GlobalConfig.Sensor=KinectSensor.GetDefault();
-            //MySensor = WindowsPreview.Kinect.KinectSensor.GetDefault;
-
-           
         }
     }
 }

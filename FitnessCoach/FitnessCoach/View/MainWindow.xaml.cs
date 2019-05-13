@@ -1,25 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Xml;
 using FitnessCoach.BoneNode;
 using FitnessCoach.Config;
-using FitnessCoach.Util;
 using Microsoft.Kinect;
 
-namespace FitnessCoach
+namespace FitnessCoach.View
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
@@ -44,8 +33,7 @@ namespace FitnessCoach
         /// 显示彩色图像
         /// </summary>
         private WriteableBitmap _colorBitmapSource = null;
-
-
+        
         /// <summary>
         /// 用于状态栏的显示
         /// </summary>
@@ -234,8 +222,7 @@ namespace FitnessCoach
                 dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(0, byte.MaxValue, byte.MaxValue, byte.MaxValue)),
                     null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 this.skeleton.DrawBodyArr(this.bodies, dc);
-                this.drawingGroup.ClipGeometry =
-                    new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
+                this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 
                 if (this._isRecord)
                     this.RecordJointAngle(this.bodies);

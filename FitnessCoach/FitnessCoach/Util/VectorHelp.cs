@@ -14,19 +14,34 @@ namespace FitnessCoach.Util
     internal class VectorHelp
     {
         /// <summary>
-        /// 获取两个三维的点组成的向量
-        /// 向量AB
+        /// 获取两个三维的点组成的向量,
+        /// 如向量AB
         /// </summary>
         /// <param name="A"></param>
         /// <param name="B"></param>
         /// <returns></returns>
         public static CameraSpacePoint GetVector(CameraSpacePoint A, CameraSpacePoint B)
         {
+            return VectorHelp.GetSubtract(B, A);
+        }
+
+        /// <summary>
+        /// 获取三维空间中两个点的之差，
+        /// 例如 A-B（表示
+        /// X = A.X - B.X,
+        /// Y = A.Y - B.Y,
+        /// Z = A.Z - B.Z）
+        /// </summary>
+        /// <param name="A"></param>
+        /// <param name="B"></param>
+        /// <returns></returns>
+        public static CameraSpacePoint GetSubtract(CameraSpacePoint A, CameraSpacePoint B)
+        {
             return new CameraSpacePoint
             {
-                X = B.X - A.X,
-                Y = B.Y - A.Y,
-                Z = B.Z - A.Z
+                X = A.X - B.X,
+                Y = A.Y - B.Y,
+                Z = A.Z - B.Z
             };
         }
 
@@ -79,6 +94,7 @@ namespace FitnessCoach.Util
                 unitVector.Y = vector.Y / vectorLength;
                 unitVector.Z = vector.Z / vectorLength;
             }
+
             return unitVector;
         }
     }
