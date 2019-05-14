@@ -17,9 +17,9 @@ using Microsoft.Kinect;
 
 namespace TestWinForm
 {
-    public partial class TestFrom : Form
+    public partial class TestForm : Form
     {
-        public TestFrom()
+        public TestForm()
         {
             InitializeComponent();
         }
@@ -40,29 +40,30 @@ namespace TestWinForm
         private void button2_Click(object sender, EventArgs e)
         {
             AttitudeModel bodyJoint = new AttitudeModel();
-            bodyJoint.ActionName = "RaiseLeftHand";
+            bodyJoint.AttitudeName = "RaiseLeftHand";
             bodyJoint.JointAngles = new List<JointAngle>()
             {
                 //左臂的关节节点
-                new JointAngle() {Name = JointType.HandLeft, Angle = 60},
+                new JointAngle() {Name = JointType.HandLeft, Angle = 180},
                 new JointAngle() {Name = JointType.WristLeft, Angle = 180},
                 new JointAngle() {Name = JointType.ElbowLeft, Angle = 180},
                 new JointAngle() {Name = JointType.ShoulderLeft, Angle = 180},
             };
+
             bodyJoint.KeyBones = new List<KeyBone>()
             {
                 new KeyBone()
                 {
                     Name = Bone.BigArmLeft,
                     Vector = new CameraSpacePoint() {X = -50, Y = 0, Z = 0},
-                    AngleX = 180,
+                    AngleX = 0,
                     AngleY = 90,
                     AngleZ = 90
                 },
             };
 
-            string serializationStr = SerializationHelp.Serializer(bodyJoint);
-            AttitudeModel obj = SerializationHelp.Deserialize<AttitudeModel>(serializationStr);
+            string serializationStr = XmlUtil.Serializer(bodyJoint);
+            AttitudeModel obj = XmlUtil.Deserialize<AttitudeModel>(serializationStr);
         }
 
         private SpeechRecognitionEngine recognizer;

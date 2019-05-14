@@ -70,7 +70,7 @@
     <Compile Include="Core\CoreModel.cs" />
     <Compile Include="BoneNode\Bone.cs" />
     <Compile Include="Config\GlobalConfig.cs" />
-    <Compile Include="Util\SerializationHelp.cs" />
+    <Compile Include="Util\XmlUtil.cs" />
     <Compile Include="BoneNode\Skeleton.cs" />
     <Page Include="View\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -119,7 +119,7 @@
     <None Include="Resources\autorun.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Model\RaiseLeftHand.xml">
+    <None Include="Model\RaiseLeftHand.model">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </None>

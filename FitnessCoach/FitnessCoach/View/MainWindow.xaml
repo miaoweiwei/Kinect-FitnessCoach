@@ -34,8 +34,8 @@
 
         <StatusBar Name="InfoStatusBar" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
                    Background="White" Foreground="{StaticResource MediumGreyBrush}">
-            <StatusBarItem Content="{Binding StatusText}" />
+            <StatusBarItem Content="{Binding StatusText}" FontSize="20"/>
         </StatusBar>
-        <Button Grid.Row="2" Name="BtnStartRecording" Content="记录节点角度" HorizontalAlignment="Right" Margin="5,5,5,5" Click="BtnStartRecording_OnClick"></Button>
+        <Button Grid.Row="2" Name="BtnStartRecording" Content="姿态识别" HorizontalAlignment="Right" Margin="5,5,5,5" Click="BtnStartRecording_OnClick"></Button>
     </Grid>
 </Window>

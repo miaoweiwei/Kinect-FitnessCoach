@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FitnessCoach.BoneNode;
 using FitnessCoach.Config;
+using FitnessCoach.Core;
+using FitnessCoach.Util;
 using Microsoft.Kinect;
 
 namespace FitnessCoach.View
@@ -15,7 +20,12 @@ namespace FitnessCoach.View
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        #region 姿态识别
+
         private bool _isRecord;
+        private AttitudeRecognition attitudeRecognition;
+
+        #endregion
 
         #region 有关UI的字段
 
@@ -33,7 +43,7 @@ namespace FitnessCoach.View
         /// 显示彩色图像
         /// </summary>
         private WriteableBitmap _colorBitmapSource = null;
-        
+
         /// <summary>
         /// 用于状态栏的显示
         /// </summary>
@@ -222,8 +232,9 @@ namespace FitnessCoach.View
                 dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(0, byte.MaxValue, byte.MaxValue, byte.MaxValue)),
                     null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 this.skeleton.DrawBodyArr(this.bodies, dc);
-                this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
-                
+                this.drawingGroup.ClipGeometry =
+                    new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
+
                 if (this._isRecord)
                     this.RecordJointAngle(this.bodies);
             }
@@ -256,21 +267,28 @@ namespace FitnessCoach.View
             }
         }
 
+       
+
         private void BtnStartRecording_OnClick(object sender, RoutedEventArgs e)
         {
             _isRecord = !_isRecord;
-            BtnStartRecording.Content = _isRecord ? "停止记录节点角度" : "记录节点角度";
+            BtnStartRecording.Content = _isRecord ? "停止姿态识别" : "姿态识别";
+            if (attitudeRecognition == null)
+            {
+                string modelDirPath = "Model";
+                attitudeRecognition = new AttitudeRecognition(modelDirPath);
+            }
         }
 
         private void RecordJointAngle(Body[] bodies)
         {
             //TODO 录制骨骼信息用于模型的识别
-            Dictionary<JointType, float> jointAngleDIc = new Dictionary<JointType, float>();
             foreach (Body body in bodies)
             {
                 if (body.IsTracked)
                 {
-                    jointAngleDIc = Skeleton.GetBodyJointAngleDic(body.Joints);
+                    string res = attitudeRecognition.Identification(body.Joints);
+                    StatusText = string.IsNullOrEmpty(res) ? "未知的姿态" : res;
                 }
             }
         }

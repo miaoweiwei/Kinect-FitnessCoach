@@ -1,6 +1,6 @@
 ﻿namespace TestWinForm
 {
-    partial class TestFrom
+    partial class TestForm
     {
         /// <summary>
         /// 必需的设计器变量。

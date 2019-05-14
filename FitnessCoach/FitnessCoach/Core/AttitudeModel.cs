@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FitnessCoach.BoneNode;
+using Microsoft.Kinect;
 
 namespace FitnessCoach.Core
 {
@@ -14,9 +15,9 @@ namespace FitnessCoach.Core
     public class AttitudeModel : IDisposable
     {
         /// <summary>
-        /// 该动作帧的名称
+        /// 该动姿态的名称
         /// </summary>
-        public string ActionName { get; set; }
+        public string AttitudeName { get; set; }
 
         /// <summary>
         /// 姿态保持时间
@@ -66,11 +67,20 @@ namespace FitnessCoach.Core
         public bool Compared(List<JointAngle> jointAngleList, List<KeyBone> keyBoneList, float allowableAngularError,
             float allowableKeyBoneError)
         {
-            foreach (JointAngle jointAngle in JointAngles)
-                if (Math.Abs(jointAngle.Angle - jointAngleList.First(o => o.Name == jointAngle.Name).Angle) >=
-                    allowableAngularError)
+            if (JointAngles != null && JointAngles.Count > 0)
+            {
+                if (jointAngleList == null || jointAngleList.Count <= 0)
                     return false;
+                foreach (JointAngle jointAngle in JointAngles)
+                    if (Math.Abs(jointAngle.Angle - jointAngleList.First(o => o.Name == jointAngle.Name).Angle) >=
+                        allowableAngularError)
+                        return false;
+            }
 
+            if (KeyBones == null || KeyBones.Count <= 0)
+                return true;
+            if (keyBoneList == null || keyBoneList.Count <= 0)
+                return false;
             //对比关键骨骼的数据
             foreach (var keyBone in KeyBones)
             {
@@ -82,7 +92,6 @@ namespace FitnessCoach.Core
                 if (Math.Abs(keyBone.AngleZ - key.AngleZ) >= allowableKeyBoneError)
                     return false;
             }
-
             return true;
         }
 

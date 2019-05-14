@@ -299,13 +299,14 @@ namespace FitnessCoach.BoneNode
             DrawingContext dc, Brush foreground)
         {
             //关节的角度
-            Dictionary<JointType, float> bodyJointAngleDic = Skeleton.GetBodyJointAngleDic(joints3);
-            foreach (KeyValuePair<JointType, float> pair in bodyJointAngleDic)
+            List<JointAngle> jointAngles = Skeleton.GetBodyJointAngleList(joints3);
+
+            foreach (JointAngle jointAngle in jointAngles)
             {
-                Point point = joints[pair.Key];
+                Point point = joints[jointAngle.Name];
                 // 基于设置的属性集创建格式化的文字。        
                 FormattedText formattedText = new FormattedText(
-                    pair.Value.ToString("f4"), //保留三位小数
+                    jointAngle.Angle.ToString("f4"), //保留三位小数
                     CultureInfo.GetCultureInfo("zh-cn"), //en-us 英文 zh-cn 中文
                     FlowDirection.LeftToRight,
                     new Typeface("Verdana"),
@@ -313,6 +314,31 @@ namespace FitnessCoach.BoneNode
                     foreground);
                 dc.DrawText(formattedText, point);
             }
+        }
+
+        public static List<JointAngle> GetBodyJointAngleList(IReadOnlyDictionary<JointType, Joint> joints3)
+        {
+            List<JointAngle>jointAngles=new List<JointAngle>();
+            //骨头字典
+            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = Skeleton.GetBoneDic();
+            //关节字典
+            Dictionary<JointType, Tuple<Bone, Bone>> jointDic = Skeleton.GetJointDic();
+
+            foreach (KeyValuePair<JointType, Tuple<Bone, Bone>> pair in jointDic)
+            {
+                Tuple<JointType, JointType> bondVectorTuple1 = boneDic[pair.Value.Item1];
+                Tuple<JointType, JointType> bondVectorTuple2 = boneDic[pair.Value.Item2];
+
+                CameraSpacePoint vector1 = VectorHelp.GetVector(joints3[bondVectorTuple1.Item1].Position,
+                    joints3[bondVectorTuple1.Item2].Position);
+                CameraSpacePoint vector2 = VectorHelp.GetVector(joints3[bondVectorTuple2.Item2].Position,
+                    joints3[bondVectorTuple2.Item1].Position);
+
+                float angle = VectorHelp.GetVectorAngle(vector1, vector2);
+                jointAngles.Add(new JointAngle(pair.Key,angle));
+            }
+
+            return jointAngles;
         }
 
         /// <summary>
@@ -342,6 +368,34 @@ namespace FitnessCoach.BoneNode
             }
 
             return jointAngleDic;
+        }
+        /// <summary>
+        /// 获取每个骨骼分别与坐标系的夹角（X,Y,Z轴的夹角）
+        /// </summary>
+        /// <param name="joints3"></param>
+        /// <returns></returns>
+        public static List<KeyBone> GetBodyAllKeyBones(IReadOnlyDictionary<JointType, Joint> joints3)
+        {
+            var boneDic = Skeleton.GetBoneDic();
+            var jointDic = Skeleton.GetJointDic();
+            List<KeyBone> keyBones=new List<KeyBone>();
+            foreach (Bone bone in Skeleton.GetBoneDic().Keys)
+            {
+                CameraSpacePoint point1 = joints3[boneDic[bone].Item1].Position;
+                CameraSpacePoint point2 = joints3[boneDic[bone].Item2].Position;
+                CameraSpacePoint vector = VectorHelp.GetVector(point1, point2);
+                KeyBone keyBone = new KeyBone
+                {
+                    Name = bone,
+                    Vector = vector,
+                    AngleX = VectorHelp.GetVectorAngle(vector, new CameraSpacePoint() { X = 1, Y = 0, Z = 0 }),
+                    AngleY = VectorHelp.GetVectorAngle(vector, new CameraSpacePoint() { X = 0, Y = 1, Z = 0 }),
+                    AngleZ = VectorHelp.GetVectorAngle(vector, new CameraSpacePoint() { X = 0, Y = 0, Z = 1 })
+                };
+                keyBones.Add(keyBone);
+            }
+
+            return keyBones;
         }
     }
 }

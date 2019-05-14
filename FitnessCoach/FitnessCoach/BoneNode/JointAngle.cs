@@ -12,6 +12,15 @@ namespace FitnessCoach.BoneNode
     /// </summary>
     public class JointAngle
     {
+        public JointAngle()
+        {
+        }
+        public JointAngle(JointType name, float angle)
+        {
+            Name = name;
+            Angle = angle;
+        }
+
         /// <summary>
         /// 关节类型名字
         /// </summary>
