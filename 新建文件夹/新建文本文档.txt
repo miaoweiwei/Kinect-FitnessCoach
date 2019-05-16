@@ -1,0 +1,2 @@
+Failed to load 
+NppTranslation.dll is not compatible with the current version of Notepad++.
