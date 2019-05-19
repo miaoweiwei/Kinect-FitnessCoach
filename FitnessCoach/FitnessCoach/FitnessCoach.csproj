@@ -65,6 +65,7 @@
     </ApplicationDefinition>
     <Compile Include="BoneNode\JointAngle.cs" />
     <Compile Include="BoneNode\KeyBone.cs" />
+    <Compile Include="BoneNode\SkeletonDictionary.cs" />
     <Compile Include="Core\AttitudeModel.cs" />
     <Compile Include="Core\AttitudeRecognition.cs" />
     <Compile Include="Core\CoreModel.cs" />

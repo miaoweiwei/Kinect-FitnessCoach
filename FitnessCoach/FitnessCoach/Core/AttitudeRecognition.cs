@@ -82,19 +82,28 @@ namespace FitnessCoach.Core
         {
             List<KeyBone> keyBones = Skeleton.GetBodyAllKeyBones(joints3);
             List<JointAngle> jointAngles = Skeleton.GetBodyJointAngleList(joints3);
-            StringBuilder sbBuilder = new StringBuilder();
+            StringBuilder compareResults = new StringBuilder();
+            StringBuilder promptMsg = new StringBuilder();
 
             foreach (AttitudeModel model in ModelList)
             {
-                if (model.Compared(jointAngles, keyBones))
-                    sbBuilder.Append(model.AttitudeName + ",");
+                if (model.Compared(jointAngles, keyBones, out string msg))
+                {
+                    compareResults.Append(model.AttitudeName + ",");
+                    promptMsg.Append(msg + ",");
+                }
 
                 KeyBone k = keyBones.First(o => o.Name == model.KeyBones[0].Name);
-                Debug.WriteLine($"Name:{k.Name},X:{k.AngleX},Y:{k.AngleY},Z:{k.AngleZ}");
+                Debug.WriteLine($"识别结果:{k.Name},X:{k.AngleX},Y:{k.AngleY},Z:{k.AngleZ}");
+                Debug.WriteLine($"提示信息:{msg}");
             }
 
-            Debug.WriteLine(sbBuilder);
-            return sbBuilder.ToString();
+            compareResults.Remove(compareResults.Length - 1, 1);
+            promptMsg.Remove(promptMsg.Length - 1, 1);
+
+            Debug.WriteLine(compareResults);
+            compareResults.Append("#*#" + promptMsg);
+            return compareResults.ToString();
         }
     }
 }

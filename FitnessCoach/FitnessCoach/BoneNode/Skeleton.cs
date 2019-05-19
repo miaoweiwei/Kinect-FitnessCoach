@@ -71,85 +71,35 @@ namespace FitnessCoach.BoneNode
             this.CoordinateMapper = coordinateMapper;
         }
 
-
         /// <summary>
-        /// 返回骨骼字典，Key为骨骼的名字，value为骨骼的两端点，
-        /// <see cref="JointType.SpineMid"/> 为身体中间部位
+        /// 获取每个骨骼分别与坐标系的夹角（X,Y,Z轴的夹角）
         /// </summary>
+        /// <param name="joints3"></param>
         /// <returns></returns>
-        public static Dictionary<Bone, Tuple<JointType, JointType>> GetBoneDic()
+        public static List<KeyBone> GetBodyAllKeyBones(IReadOnlyDictionary<JointType, Joint> joints3)
         {
-            Dictionary<Bone, Tuple<JointType, JointType>> dic = new Dictionary<Bone, Tuple<JointType, JointType>>()
+            var boneDic = SkeletonDictionary.GetBoneDic();
+            var jointDic = SkeletonDictionary.GetJointDic();
+            List<KeyBone> keyBones = new List<KeyBone>();
+            foreach (Bone bone in SkeletonDictionary.GetBoneDic().Keys)
             {
-                /***********************左边上肢骨骼***********************/
-                {Bone.FingerLeft, new Tuple<JointType, JointType>(JointType.HandTipLeft, JointType.HandLeft)},
-                {Bone.PalmLeft, new Tuple<JointType, JointType>(JointType.HandLeft, JointType.WristLeft)},
-                {Bone.ThumbLeft, new Tuple<JointType, JointType>(JointType.ThumbLeft, JointType.WristLeft)},
-                {Bone.ArmLeft, new Tuple<JointType, JointType>(JointType.WristLeft, JointType.ElbowLeft)},
-                {Bone.BigArmLeft, new Tuple<JointType, JointType>(JointType.ElbowLeft, JointType.ShoulderLeft)},
-                {Bone.ShoulderLeft, new Tuple<JointType, JointType>(JointType.ShoulderLeft, JointType.SpineShoulder)},
-                /***********************左边下肢骨骼***********************/
-                {Bone.FootLeft, new Tuple<JointType, JointType>(JointType.FootLeft, JointType.AnkleLeft)},
-                {Bone.LowerLegLeft, new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.KneeLeft)},
-                {Bone.ThighLeft, new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.HipLeft)},
-                {Bone.HipLeft, new Tuple<JointType, JointType>(JointType.HipLeft, JointType.SpineBase)},
+                CameraSpacePoint point1 = joints3[boneDic[bone].Item1].Position;
+                CameraSpacePoint point2 = joints3[boneDic[bone].Item2].Position;
+                CameraSpacePoint vector = VectorHelp.GetVector(point1, point2);
+                KeyBone keyBone = new KeyBone
+                {
+                    Name = bone,
+                    Vector = vector,
+                    AngleX = VectorHelp.GetVectorAngle(vector, new CameraSpacePoint() {X = 1, Y = 0, Z = 0}),
+                    AngleY = VectorHelp.GetVectorAngle(vector, new CameraSpacePoint() {X = 0, Y = 1, Z = 0}),
+                    AngleZ = VectorHelp.GetVectorAngle(vector, new CameraSpacePoint() {X = 0, Y = 0, Z = 1})
+                };
+                keyBones.Add(keyBone);
+            }
 
-                /***********************右边上肢骨骼***********************/
-                {Bone.FingerRight, new Tuple<JointType, JointType>(JointType.HandTipRight, JointType.HandRight)},
-                {Bone.PalmRight, new Tuple<JointType, JointType>(JointType.HandRight, JointType.WristRight)},
-                {Bone.ThumbRight, new Tuple<JointType, JointType>(JointType.ThumbRight, JointType.WristRight)},
-                {Bone.ArmRight, new Tuple<JointType, JointType>(JointType.WristRight, JointType.ElbowRight)},
-                {Bone.BigArmRight, new Tuple<JointType, JointType>(JointType.ElbowRight, JointType.ShoulderRight)},
-                {Bone.ShoulderRight, new Tuple<JointType, JointType>(JointType.ShoulderRight, JointType.SpineShoulder)},
-                /***********************右边下肢骨骼***********************/
-                {Bone.FootRight, new Tuple<JointType, JointType>(JointType.FootRight, JointType.AnkleRight)},
-                {Bone.LowerLegRight, new Tuple<JointType, JointType>(JointType.AnkleRight, JointType.KneeRight)},
-                {Bone.ThighRight, new Tuple<JointType, JointType>(JointType.KneeRight, JointType.HipRight)},
-                {Bone.HipRight, new Tuple<JointType, JointType>(JointType.HipRight, JointType.SpineBase)},
-
-                /***********************躯干***********************/
-                {Bone.Neck, new Tuple<JointType, JointType>(JointType.Head, JointType.Neck)},
-                {Bone.NeckShoulder, new Tuple<JointType, JointType>(JointType.Neck, JointType.SpineShoulder)},
-                {Bone.SpineUp, new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.SpineMid)},
-                {Bone.SpineDown, new Tuple<JointType, JointType>(JointType.SpineMid, JointType.SpineBase)},
-            };
-            return dic;
+            return keyBones;
         }
 
-        /// <summary>
-        /// 返回关节节点所对应的两个骨骼的字典
-        /// </summary>
-        /// <returns></returns>
-        public static Dictionary<JointType, Tuple<Bone, Bone>> GetJointDic()
-        {
-            Dictionary<JointType, Tuple<Bone, Bone>> dic = new Dictionary<JointType, Tuple<Bone, Bone>>()
-            {
-                //左臂的关节节点
-                {JointType.HandLeft, new Tuple<Bone, Bone>(Bone.FingerLeft, Bone.PalmLeft)},
-                {JointType.WristLeft, new Tuple<Bone, Bone>(Bone.PalmLeft, Bone.ArmLeft)},
-                {JointType.ElbowLeft, new Tuple<Bone, Bone>(Bone.ArmLeft, Bone.BigArmLeft)},
-                {JointType.ShoulderLeft, new Tuple<Bone, Bone>(Bone.BigArmLeft, Bone.ShoulderLeft)},
-                //左腿的关节节点
-                {JointType.AnkleLeft, new Tuple<Bone, Bone>(Bone.FootLeft, Bone.LowerLegLeft)},
-                {JointType.KneeLeft, new Tuple<Bone, Bone>(Bone.LowerLegLeft, Bone.ThighLeft)},
-                {JointType.HipLeft, new Tuple<Bone, Bone>(Bone.ThighLeft, Bone.HipLeft)},
-
-                //右臂的关节节点
-                {JointType.HandRight, new Tuple<Bone, Bone>(Bone.FingerRight, Bone.PalmRight)},
-                {JointType.WristRight, new Tuple<Bone, Bone>(Bone.PalmRight, Bone.ArmRight)},
-                {JointType.ElbowRight, new Tuple<Bone, Bone>(Bone.ArmRight, Bone.BigArmRight)},
-                {JointType.ShoulderRight, new Tuple<Bone, Bone>(Bone.BigArmRight, Bone.ShoulderRight)},
-                //右腿的关节节点
-                {JointType.AnkleRight, new Tuple<Bone, Bone>(Bone.FootRight, Bone.LowerLegRight)},
-                {JointType.KneeRight, new Tuple<Bone, Bone>(Bone.LowerLegRight, Bone.ThighRight)},
-                {JointType.HipRight, new Tuple<Bone, Bone>(Bone.ThighRight, Bone.HipRight)},
-
-                //躯干
-                {JointType.Neck, new Tuple<Bone, Bone>(Bone.Neck, Bone.NeckShoulder)},
-                {JointType.SpineMid, new Tuple<Bone, Bone>(Bone.SpineUp, Bone.SpineDown)},
-            };
-            return dic;
-        }
 
         /// <summary>
         /// 画出多个人的骨骼框架
@@ -265,7 +215,7 @@ namespace FitnessCoach.BoneNode
             DrawingContext drawingContext, Pen drawingPen)
         {
             //画出骨头
-            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = GetBoneDic();
+            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
             foreach (KeyValuePair<Bone, Tuple<JointType, JointType>> boneValuePair in boneDic)
             {
                 Tuple<JointType, JointType> bone = boneValuePair.Value;
@@ -318,11 +268,11 @@ namespace FitnessCoach.BoneNode
 
         public static List<JointAngle> GetBodyJointAngleList(IReadOnlyDictionary<JointType, Joint> joints3)
         {
-            List<JointAngle>jointAngles=new List<JointAngle>();
+            List<JointAngle> jointAngles = new List<JointAngle>();
             //骨头字典
-            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = Skeleton.GetBoneDic();
+            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
             //关节字典
-            Dictionary<JointType, Tuple<Bone, Bone>> jointDic = Skeleton.GetJointDic();
+            Dictionary<JointType, Tuple<Bone, Bone>> jointDic = SkeletonDictionary.GetJointDic();
 
             foreach (KeyValuePair<JointType, Tuple<Bone, Bone>> pair in jointDic)
             {
@@ -335,7 +285,7 @@ namespace FitnessCoach.BoneNode
                     joints3[bondVectorTuple2.Item1].Position);
 
                 float angle = VectorHelp.GetVectorAngle(vector1, vector2);
-                jointAngles.Add(new JointAngle(pair.Key,angle));
+                jointAngles.Add(new JointAngle(pair.Key, angle));
             }
 
             return jointAngles;
@@ -350,9 +300,9 @@ namespace FitnessCoach.BoneNode
         {
             Dictionary<JointType, float> jointAngleDic = new Dictionary<JointType, float>();
             //骨头字典
-            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = Skeleton.GetBoneDic();
+            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
             //关节字典
-            Dictionary<JointType, Tuple<Bone, Bone>> jointDic = Skeleton.GetJointDic();
+            Dictionary<JointType, Tuple<Bone, Bone>> jointDic = SkeletonDictionary.GetJointDic();
             foreach (KeyValuePair<JointType, Tuple<Bone, Bone>> pair in jointDic)
             {
                 Tuple<JointType, JointType> bondVectorTuple1 = boneDic[pair.Value.Item1];
@@ -368,34 +318,6 @@ namespace FitnessCoach.BoneNode
             }
 
             return jointAngleDic;
-        }
-        /// <summary>
-        /// 获取每个骨骼分别与坐标系的夹角（X,Y,Z轴的夹角）
-        /// </summary>
-        /// <param name="joints3"></param>
-        /// <returns></returns>
-        public static List<KeyBone> GetBodyAllKeyBones(IReadOnlyDictionary<JointType, Joint> joints3)
-        {
-            var boneDic = Skeleton.GetBoneDic();
-            var jointDic = Skeleton.GetJointDic();
-            List<KeyBone> keyBones=new List<KeyBone>();
-            foreach (Bone bone in Skeleton.GetBoneDic().Keys)
-            {
-                CameraSpacePoint point1 = joints3[boneDic[bone].Item1].Position;
-                CameraSpacePoint point2 = joints3[boneDic[bone].Item2].Position;
-                CameraSpacePoint vector = VectorHelp.GetVector(point1, point2);
-                KeyBone keyBone = new KeyBone
-                {
-                    Name = bone,
-                    Vector = vector,
-                    AngleX = VectorHelp.GetVectorAngle(vector, new CameraSpacePoint() { X = 1, Y = 0, Z = 0 }),
-                    AngleY = VectorHelp.GetVectorAngle(vector, new CameraSpacePoint() { X = 0, Y = 1, Z = 0 }),
-                    AngleZ = VectorHelp.GetVectorAngle(vector, new CameraSpacePoint() { X = 0, Y = 0, Z = 1 })
-                };
-                keyBones.Add(keyBone);
-            }
-
-            return keyBones;
         }
     }
 }

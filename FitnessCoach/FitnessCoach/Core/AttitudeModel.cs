@@ -50,10 +50,12 @@ namespace FitnessCoach.Core
         /// </summary>
         /// <param name="jointAngleList">要对比的骨骼帧关节角度列表</param>
         /// <param name="keyBoneList">要对比的骨骼帧关键骨骼列表</param>
+        /// <param name="msgInfo">对比的提示信息</param>
         /// <returns></returns>
-        public bool Compared(List<JointAngle> jointAngleList, List<KeyBone> keyBoneList)
+        public bool Compared(List<JointAngle> jointAngleList, List<KeyBone> keyBoneList,out string msgInfo)
         {
-            return Compared(jointAngleList, keyBoneList, this.AllowableAngularError, this.AllowableKeyBoneError);
+            msgInfo = "";
+            return Compared(jointAngleList, keyBoneList, this.AllowableAngularError, this.AllowableKeyBoneError, out msgInfo);
         }
 
         /// <summary>
@@ -63,17 +65,18 @@ namespace FitnessCoach.Core
         /// <param name="keyBoneList">要对比的骨骼帧关键骨骼列表</param>
         /// <param name="allowableAngularError">允许的关节角度误差</param>
         /// <param name="allowableKeyBoneError">关键骨骼向量与坐标轴的三个角度的允许误差</param>
+        /// <param name="msgInfo">对比的提示信息</param>
         /// <returns></returns>
-        public bool Compared(List<JointAngle> jointAngleList, List<KeyBone> keyBoneList, float allowableAngularError,
-            float allowableKeyBoneError)
+        public bool Compared(List<JointAngle> jointAngleList, List<KeyBone> keyBoneList, float allowableAngularError,float allowableKeyBoneError, out string msgInfo)
         {
+            //TODO 设计对比结果提示信息
+            msgInfo = "";
             if (JointAngles != null && JointAngles.Count > 0)
             {
                 if (jointAngleList == null || jointAngleList.Count <= 0)
                     return false;
                 foreach (JointAngle jointAngle in JointAngles)
-                    if (Math.Abs(jointAngle.Angle - jointAngleList.First(o => o.Name == jointAngle.Name).Angle) >=
-                        allowableAngularError)
+                    if (Math.Abs(jointAngle.Angle - jointAngleList.First(o => o.Name == jointAngle.Name).Angle) > allowableAngularError)
                         return false;
             }
 
@@ -85,11 +88,11 @@ namespace FitnessCoach.Core
             foreach (var keyBone in KeyBones)
             {
                 KeyBone key = keyBoneList.First(o => o.Name == keyBone.Name);
-                if (Math.Abs(keyBone.AngleX - key.AngleX) >= allowableKeyBoneError)
+                if (Math.Abs(keyBone.AngleX - key.AngleX) > allowableKeyBoneError)
                     return false;
-                if (Math.Abs(keyBone.AngleY - key.AngleY) >= allowableKeyBoneError)
+                if (Math.Abs(keyBone.AngleY - key.AngleY) > allowableKeyBoneError)
                     return false;
-                if (Math.Abs(keyBone.AngleZ - key.AngleZ) >= allowableKeyBoneError)
+                if (Math.Abs(keyBone.AngleZ - key.AngleZ) > allowableKeyBoneError)
                     return false;
             }
             return true;

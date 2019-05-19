@@ -13,7 +13,7 @@ namespace FitnessCoach.Config
 {
     public static class GlobalConfig
     {
-        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger("RibbonMenu");
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger("GlobalConfig");
         private static readonly string ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "FitnessCoach.exe");
         /// <summary>
         /// 模型文件的文件夹路径
