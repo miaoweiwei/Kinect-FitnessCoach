@@ -14,17 +14,20 @@ namespace FitnessCoach.Config
     public static class GlobalConfig
     {
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger("GlobalConfig");
-        private static readonly string ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "FitnessCoach.exe");
+
+        private static readonly string ConfigPath =
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory + "FitnessCoach.exe");
+
         /// <summary>
         /// 模型文件的文件夹路径
         /// </summary>
         public static string ModelDirPath;
-        
+
         /// <summary>
-        /// Kinect
+        /// KinectSensor
         /// </summary>
         public static KinectSensor Sensor { get; private set; }
-        
+
         /// <summary>
         /// 系统初始化
         /// </summary>
@@ -37,7 +40,7 @@ namespace FitnessCoach.Config
 
         private static void LogInit()
         {
-            var configFile = new FileInfo(ConfigPath+".config");
+            var configFile = new FileInfo(ConfigPath + ".config");
             XmlConfigurator.Configure(configFile);
         }
 
@@ -57,9 +60,9 @@ namespace FitnessCoach.Config
             }
         }
 
-        public static  void GlobalVariableInit()
+        public static void GlobalVariableInit()
         {
-           GlobalConfig.Sensor=KinectSensor.GetDefault();
+            GlobalConfig.Sensor = KinectSensor.GetDefault();
         }
     }
 }

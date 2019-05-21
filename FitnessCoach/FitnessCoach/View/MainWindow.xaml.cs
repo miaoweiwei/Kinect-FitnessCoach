@@ -4,7 +4,9 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Timers;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FitnessCoach.BoneNode;
@@ -22,7 +24,7 @@ namespace FitnessCoach.View
     {
         #region 姿态识别
 
-        private bool _isRecord;
+        private bool _isRecognition;
         private AttitudeRecognition attitudeRecognition;
 
         #endregion
@@ -48,6 +50,8 @@ namespace FitnessCoach.View
         /// 用于状态栏的显示
         /// </summary>
         private string statusText = null;
+
+        private string recognitionResultText = null;
 
         /// <summary>
         /// 显示宽度（深度空间）
@@ -134,6 +138,21 @@ namespace FitnessCoach.View
             }
         }
 
+        /// <summary>
+        /// 识别结果
+        /// </summary>
+        public string RecognitionResultText
+        {
+            get => recognitionResultText;
+            set
+            {
+                if (this.recognitionResultText == value) return;
+                this.recognitionResultText = value;
+                //通知任何绑定元素文本已更改
+                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("RecognitionResultText"));
+            }
+        }
+
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
             if (this.bodyFrameReader != null)
@@ -201,13 +220,6 @@ namespace FitnessCoach.View
             this.DataContext = this;
         }
 
-        private void KinectSensor_IsAvailableChanged(object sender, IsAvailableChangedEventArgs e)
-        {
-            this.StatusText = this.kinectSensor.IsAvailable
-                ? "正在运行"
-                : "Kinect不可用!";
-        }
-
         private void BodyFrameReader_FrameArrived(object sender, BodyFrameArrivedEventArgs e)
         {
             bool dataReceived = false;
@@ -235,7 +247,7 @@ namespace FitnessCoach.View
                 this.drawingGroup.ClipGeometry =
                     new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
 
-                if (this._isRecord)
+                if (this._isRecognition)
                     this.RecordJointAngle(this.bodies);
             }
         }
@@ -267,16 +279,22 @@ namespace FitnessCoach.View
             }
         }
 
-       
+        private void KinectSensor_IsAvailableChanged(object sender, IsAvailableChangedEventArgs e)
+        {
+            this.StatusText = this.kinectSensor.IsAvailable
+                ? "正在运行"
+                : "Kinect不可用!";
+        }
+
 
         private void BtnStartRecording_OnClick(object sender, RoutedEventArgs e)
         {
-            _isRecord = !_isRecord;
-            BtnStartRecording.Content = _isRecord ? "停止姿态识别" : "姿态识别";
+            _isRecognition = !_isRecognition;
+            BtnStartRecording.Content = _isRecognition ? "停止姿态识别" : "姿态识别";
+            StatusText = _isRecognition ? "正在识别中..." : "未进行识别";
             if (attitudeRecognition == null)
             {
-                string modelDirPath = "Model";
-                attitudeRecognition = new AttitudeRecognition(modelDirPath);
+                attitudeRecognition = AttitudeRecognition.GetAttitudeRecognition();
             }
         }
 
@@ -287,8 +305,14 @@ namespace FitnessCoach.View
             {
                 if (body.IsTracked)
                 {
-                    string res = attitudeRecognition.Identification(body.Joints);
-                    StatusText = string.IsNullOrEmpty(res) ? "未知的姿态" : res;
+                    List<RecognitionResult> resList = attitudeRecognition.Identification(body.Joints);
+                    string resultStr = "";
+                    foreach (RecognitionResult result in resList)
+                    {
+                        resultStr += $"姿态：{result.AttitudeName};提示信息：{string.Join(",", result.InfoMessages)}\r";
+                    }
+                    
+                    RecognitionResultText = !string.IsNullOrEmpty(resultStr) ? resultStr : resultStr.Remove(resultStr.Length - 1);
                 }
             }
         }

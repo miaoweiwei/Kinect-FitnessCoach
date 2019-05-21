@@ -104,7 +104,7 @@ namespace TestWinForm
         //语音识别
         private void btnSpeechRecognition1_Click(object sender, EventArgs e)
         {
-            RecognitionResult result = recognizer.Recognize();
+            System.Speech.Recognition.RecognitionResult result = recognizer.Recognize();
             // Console.WriteLine(result.Text);
             //启动异步，连续语音识别。
             //recognizer.RecognizeAsync(RecognizeMode.Multiple);

@@ -50,12 +50,12 @@ namespace FitnessCoach.Core
         /// </summary>
         /// <param name="jointAngleList">要对比的骨骼帧关节角度列表</param>
         /// <param name="keyBoneList">要对比的骨骼帧关键骨骼列表</param>
-        /// <param name="msgInfo">对比的提示信息</param>
+        /// <param name="result">对比的提示信息</param>
         /// <returns></returns>
-        public bool Compared(List<JointAngle> jointAngleList, List<KeyBone> keyBoneList,out string msgInfo)
+        public bool Compared(List<JointAngle> jointAngleList, List<KeyBone> keyBoneList, out RecognitionResult result)
         {
-            msgInfo = "";
-            return Compared(jointAngleList, keyBoneList, this.AllowableAngularError, this.AllowableKeyBoneError, out msgInfo);
+            return Compared(jointAngleList, keyBoneList, this.AllowableAngularError, this.AllowableKeyBoneError,
+                out result);
         }
 
         /// <summary>
@@ -65,19 +65,27 @@ namespace FitnessCoach.Core
         /// <param name="keyBoneList">要对比的骨骼帧关键骨骼列表</param>
         /// <param name="allowableAngularError">允许的关节角度误差</param>
         /// <param name="allowableKeyBoneError">关键骨骼向量与坐标轴的三个角度的允许误差</param>
-        /// <param name="msgInfo">对比的提示信息</param>
+        /// <param name="result">对比的提示信息</param>
         /// <returns></returns>
-        public bool Compared(List<JointAngle> jointAngleList, List<KeyBone> keyBoneList, float allowableAngularError,float allowableKeyBoneError, out string msgInfo)
+        public bool Compared(List<JointAngle> jointAngleList, List<KeyBone> keyBoneList, float allowableAngularError,
+            float allowableKeyBoneError, out RecognitionResult result)
         {
             //TODO 设计对比结果提示信息
-            msgInfo = "";
+            result = new RecognitionResult()
+            {
+                AttitudeName = this.AttitudeName ,
+                InfoMessages = new List<string>()
+            };
             if (JointAngles != null && JointAngles.Count > 0)
             {
                 if (jointAngleList == null || jointAngleList.Count <= 0)
                     return false;
                 foreach (JointAngle jointAngle in JointAngles)
                     if (Math.Abs(jointAngle.Angle - jointAngleList.First(o => o.Name == jointAngle.Name).Angle) > allowableAngularError)
+                    {
+                        result.InfoMessages.Add($"请使{BoneNode.SkeletonDictionary.GetJointNameDic()[jointAngle.Name]}活动到{jointAngle.Angle}度");
                         return false;
+                    }
             }
 
             if (KeyBones == null || KeyBones.Count <= 0)
@@ -95,6 +103,7 @@ namespace FitnessCoach.Core
                 if (Math.Abs(keyBone.AngleZ - key.AngleZ) > allowableKeyBoneError)
                     return false;
             }
+
             return true;
         }
 

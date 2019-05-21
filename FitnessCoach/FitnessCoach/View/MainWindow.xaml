@@ -22,20 +22,35 @@
         </Grid.RowDefinitions>
         <TextBlock Grid.Row="0" Margin="0 0 0 0" HorizontalAlignment="Left">Kinect</TextBlock>
         <TextBlock Grid.Row="0" Margin="0 0 0 0" HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                   FontFamily="Segoe UI" FontSize="18">骨骼图</TextBlock>
+                   FontFamily="Segoe UI" FontSize="18">
+            骨骼图
+        </TextBlock>
         <TextBlock Name="frameRateTbx" Grid.Row="0" Margin="0 0 0 0" HorizontalAlignment="Right">0fps</TextBlock>
 
-        <Viewbox Grid.Row="1" HorizontalAlignment="Center" Opacity="1" VerticalAlignment="Center" >
-            <Image Source="{Binding ColorBitmapSource}" Stretch="UniformToFill"/>
+        <Viewbox Grid.Row="1" HorizontalAlignment="Center" Opacity="1" VerticalAlignment="Center">
+            <Image Source="{Binding ColorBitmapSource}" Stretch="UniformToFill" />
         </Viewbox>
-        <Viewbox Grid.Row="1" HorizontalAlignment="Center" Opacity="1" VerticalAlignment="Center" >
+        <Viewbox Grid.Row="1" HorizontalAlignment="Center" Opacity="1" VerticalAlignment="Center">
             <Image Source="{Binding BodyImageSource}" Stretch="UniformToFill" />
         </Viewbox>
-
-        <StatusBar Name="InfoStatusBar" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
-                   Background="White" Foreground="{StaticResource MediumGreyBrush}">
-            <StatusBarItem Content="{Binding StatusText}" FontSize="20"/>
-        </StatusBar>
-        <Button Grid.Row="2" Name="BtnStartRecording" Content="姿态识别" HorizontalAlignment="Right" Margin="5,5,5,5" Click="BtnStartRecording_OnClick"></Button>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StatusBar Name="InfoStatusBar" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
+                       Background="White" Foreground="{StaticResource MediumGreyBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <StatusBarItem Grid.Row="0" Content="{Binding StatusText}" FontSize="20" />
+                    <StatusBarItem Grid.Row="1" Content="{Binding RecognitionResultText}" FontSize="20" />
+                </Grid>
+            </StatusBar>
+            <Button Grid.Column="1" Name="BtnStartRecording" Content="姿态识别" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Margin="3 3 3 3" Click="BtnStartRecording_OnClick" />
+        </Grid>
     </Grid>
 </Window>

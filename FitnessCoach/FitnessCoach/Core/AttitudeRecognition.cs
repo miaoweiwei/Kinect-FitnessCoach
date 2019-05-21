@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 using FitnessCoach.BoneNode;
+using FitnessCoach.Config;
 using FitnessCoach.Util;
 using Microsoft.Kinect;
 
@@ -18,41 +19,61 @@ namespace FitnessCoach.Core
     /// </summary>
     public class AttitudeRecognition
     {
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger("AttitudeRecognition");
+
         /// <summary>
         /// 模型的文件夹
         /// </summary>
-        public string DirPath { get; set; }
+        public string DirPath { get; set; } = GlobalConfig.ModelDirPath;
 
         /// <summary>
         /// 要识别的模型列表
         /// </summary>
         public List<AttitudeModel> ModelList { get; set; }
 
-        /// <summary>
-        /// 姿态识别类
-        /// </summary>
-        /// <param name="dirPath">模型文件的路径</param>
-        public AttitudeRecognition(string dirPath)
-        {
-            DirPath = dirPath;
-            ModelList = new List<AttitudeModel>();
-            LoadModel();
-        }
+        #region 单例
+
+        private static AttitudeRecognition _instance = null;
+        private static readonly object SyncRoot = new object();
 
         /// <summary>
-        /// 加载指定<see cref="DirPath"/>文件夹里的模型模型
+        /// 用单例的模式获取姿态识别类<see cref="AttitudeRecognition"/>
         /// </summary>
-        public void LoadModel()
+        /// <returns></returns>
+        public static AttitudeRecognition GetAttitudeRecognition()
         {
-            LoadModel(DirPath);
+            if (_instance == null)
+            {
+                lock (SyncRoot)
+                {
+                    if (_instance == null)
+                        _instance = new AttitudeRecognition();
+                }
+            }
+
+            return _instance;
+        }
+
+        #endregion
+
+        private AttitudeRecognition()
+        {
+            ModelList = new List<AttitudeModel>();
+            this.LoadModel(DirPath);
         }
 
         /// <summary>
         /// 加载指定文件夹里的模型
         /// </summary>
-        /// <param name="dirPath"></param>
+        /// <param name="dirPath">模型文件的路径</param>
         public void LoadModel(string dirPath)
         {
+            if (!Directory.Exists(dirPath))
+            {
+                Log.Debug($"指定的模型文件夹:{dirPath} 不存在！");
+                return;
+            }
+
             string[] filePathArr = Directory.GetFiles(dirPath);
             foreach (string filePath in filePathArr)
             {
@@ -60,50 +81,71 @@ namespace FitnessCoach.Core
             }
         }
 
+        /// <summary>
+        /// 加载模型文件
+        /// </summary>
+        /// <param name="filePath"></param>
         public void LoadModelFromFile(string filePath)
         {
+            if (!File.Exists(filePath))
+            {
+                Log.Debug($"指定的模型文件:{filePath} 不存在！");
+                return;
+            }
+
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
                 return;
             string xmlStr = File.ReadAllText(filePath);
             LoadModelFromString(xmlStr);
         }
 
+        /// <summary>
+        /// 加载模型XML
+        /// </summary>
+        /// <param name="modelXmlStr"></param>
         public void LoadModelFromString(string modelXmlStr)
         {
+            if (string.IsNullOrEmpty(modelXmlStr))
+            {
+                Log.Debug($"指定的模型XML字符串不能为空！");
+                return;
+            }
+
             AttitudeModel attitude = XmlUtil.Deserialize<AttitudeModel>(modelXmlStr);
-            this.ModelList.Add(attitude);
+            if (this.ModelList.Exists(o => o.AttitudeName == attitude.AttitudeName))
+            {
+                int index = this.ModelList.FindIndex(o => o.AttitudeName == attitude.AttitudeName);
+                this.ModelList[index] = attitude;
+            }
+            else
+                this.ModelList.Add(attitude);
         }
 
         /// <summary>
         /// 姿态识别
         /// </summary>
-        /// <returns></returns>
-        public string Identification(IReadOnlyDictionary<JointType, Joint> joints3)
+        /// <returns>返回识别的结果 <see cref=" List&lt;RecognitionResult&gt; "/></returns>
+        public List<RecognitionResult> Identification(IReadOnlyDictionary<JointType, Joint> joints3)
         {
             List<KeyBone> keyBones = Skeleton.GetBodyAllKeyBones(joints3);
             List<JointAngle> jointAngles = Skeleton.GetBodyJointAngleList(joints3);
-            StringBuilder compareResults = new StringBuilder();
-            StringBuilder promptMsg = new StringBuilder();
 
+            List<RecognitionResult> resultList = new List<RecognitionResult>();
             foreach (AttitudeModel model in ModelList)
             {
-                if (model.Compared(jointAngles, keyBones, out string msg))
-                {
-                    compareResults.Append(model.AttitudeName + ",");
-                    promptMsg.Append(msg + ",");
-                }
+                //if (model.Compared(jointAngles, keyBones, out RecognitionResult result))
+                //{
+                //    resultList.Add(result);
+                //}
+                model.Compared(jointAngles, keyBones, out RecognitionResult result);
+                resultList.Add(result);
 
-                KeyBone k = keyBones.First(o => o.Name == model.KeyBones[0].Name);
-                Debug.WriteLine($"识别结果:{k.Name},X:{k.AngleX},Y:{k.AngleY},Z:{k.AngleZ}");
-                Debug.WriteLine($"提示信息:{msg}");
+                //KeyBone k = keyBones.First(o => o.Name == model.KeyBones[0].Name);
+                //Debug.WriteLine($"识别结果:{k.Name},X:{k.AngleX},Y:{k.AngleY},Z:{k.AngleZ}");
+                //Debug.WriteLine($"提示信息:{msg}");
             }
 
-            compareResults.Remove(compareResults.Length - 1, 1);
-            promptMsg.Remove(promptMsg.Length - 1, 1);
-
-            Debug.WriteLine(compareResults);
-            compareResults.Append("#*#" + promptMsg);
-            return compareResults.ToString();
+            return resultList;
         }
     }
 }

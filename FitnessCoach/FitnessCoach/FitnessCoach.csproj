@@ -71,6 +71,8 @@
     <Compile Include="Core\CoreModel.cs" />
     <Compile Include="BoneNode\Bone.cs" />
     <Compile Include="Config\GlobalConfig.cs" />
+    <Compile Include="Core\RecognitionResult.cs" />
+    <Compile Include="Util\SystemSleepManagement.cs" />
     <Compile Include="Util\XmlUtil.cs" />
     <Compile Include="BoneNode\Skeleton.cs" />
     <Page Include="View\MainWindow.xaml">
@@ -82,7 +84,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Util\SpeechHelp.cs" />
-    <Compile Include="Util\SpeechRecognition.cs" />
     <Compile Include="Util\VectorHelp.cs" />
     <Compile Include="View\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
