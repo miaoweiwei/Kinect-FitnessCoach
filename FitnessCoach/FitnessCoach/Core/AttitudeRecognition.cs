@@ -95,8 +95,16 @@ namespace FitnessCoach.Core
 
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
                 return;
-            string xmlStr = File.ReadAllText(filePath);
-            LoadModelFromString(xmlStr);
+
+            try
+            {
+                string xmlStr = File.ReadAllText(filePath);
+                LoadModelFromString(xmlStr);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"模型加载失败：{ex.Message};错误地址：{ex.StackTrace.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries)[0].Trim()}");
+            }
         }
 
         /// <summary>

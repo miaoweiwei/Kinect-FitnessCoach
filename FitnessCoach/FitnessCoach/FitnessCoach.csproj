@@ -66,13 +66,14 @@
     <Compile Include="BoneNode\JointAngle.cs" />
     <Compile Include="BoneNode\KeyBone.cs" />
     <Compile Include="BoneNode\SkeletonDictionary.cs" />
+    <Compile Include="Core\ActionModel.cs" />
     <Compile Include="Core\AttitudeModel.cs" />
     <Compile Include="Core\AttitudeRecognition.cs" />
-    <Compile Include="Core\CoreModel.cs" />
     <Compile Include="BoneNode\Bone.cs" />
     <Compile Include="Config\GlobalConfig.cs" />
     <Compile Include="Core\RecognitionResult.cs" />
     <Compile Include="Util\SystemSleepManagement.cs" />
+    <Compile Include="Util\Tools.cs" />
     <Compile Include="Util\XmlUtil.cs" />
     <Compile Include="BoneNode\Skeleton.cs" />
     <Page Include="View\MainWindow.xaml">
@@ -118,12 +119,19 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\autorun.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Model\RaiseLeftHand.model">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hand.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hand_selected.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -61,8 +61,12 @@ namespace TestWinForm
                     AngleZ = 90
                 },
             };
-
             string serializationStr = XmlUtil.Serializer(bodyJoint);
+
+
+            ActionModel action = new ActionModel();
+            action.KeyFrameAttitudeModelList = new List<AttitudeModel>(){ bodyJoint };
+
             AttitudeModel obj = XmlUtil.Deserialize<AttitudeModel>(serializationStr);
         }
 
@@ -71,7 +75,7 @@ namespace TestWinForm
         public void SRecognition() //创建关键词语列表  
         {
             //创建中文识别器
-            recognizer =new SpeechRecognitionEngine(new System.Globalization.CultureInfo("zh-CN"));
+            recognizer = new SpeechRecognitionEngine(new System.Globalization.CultureInfo("zh-CN"));
 
             //----------------
             //初始化命令词

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FitnessCoach.BoneNode;
 using Microsoft.Kinect;
+using System.Xml.Serialization;
 
 namespace FitnessCoach.Core
 {
@@ -23,6 +24,12 @@ namespace FitnessCoach.Core
         /// 姿态保持时间
         /// </summary>
         public int Duration { get; set; } = 3000;
+
+        /// <summary>
+        /// 是否已经正确对比
+        /// </summary>
+        [XmlIgnore] //不序列化
+        public bool IsCompared { get; private set; }
 
         /// <summary>
         /// 允许的关节角度误差，默认10度
@@ -54,8 +61,9 @@ namespace FitnessCoach.Core
         /// <returns></returns>
         public bool Compared(List<JointAngle> jointAngleList, List<KeyBone> keyBoneList, out RecognitionResult result)
         {
-            return Compared(jointAngleList, keyBoneList, this.AllowableAngularError, this.AllowableKeyBoneError,
-                out result);
+            this.IsCompared = Compared(jointAngleList, keyBoneList, this.AllowableAngularError,
+                this.AllowableKeyBoneError, out result);
+            return this.IsCompared;
         }
 
         /// <summary>
@@ -73,7 +81,7 @@ namespace FitnessCoach.Core
             //TODO 设计对比结果提示信息
             result = new RecognitionResult()
             {
-                AttitudeName = this.AttitudeName ,
+                AttitudeName = this.AttitudeName,
                 InfoMessages = new List<string>()
             };
             if (JointAngles != null && JointAngles.Count > 0)
@@ -81,9 +89,11 @@ namespace FitnessCoach.Core
                 if (jointAngleList == null || jointAngleList.Count <= 0)
                     return false;
                 foreach (JointAngle jointAngle in JointAngles)
-                    if (Math.Abs(jointAngle.Angle - jointAngleList.First(o => o.Name == jointAngle.Name).Angle) > allowableAngularError)
+                    if (Math.Abs(jointAngle.Angle - jointAngleList.First(o => o.Name == jointAngle.Name).Angle) >
+                        allowableAngularError)
                     {
-                        result.InfoMessages.Add($"请使{BoneNode.SkeletonDictionary.GetJointNameDic()[jointAngle.Name]}活动到{jointAngle.Angle}度");
+                        result.InfoMessages.Add(
+                            $"请使{BoneNode.SkeletonDictionary.GetJointNameDic()[jointAngle.Name]}活动到{jointAngle.Angle}度");
                         return false;
                     }
             }
@@ -103,8 +113,8 @@ namespace FitnessCoach.Core
                 if (Math.Abs(keyBone.AngleZ - key.AngleZ) > allowableKeyBoneError)
                     return false;
             }
-
-            return true;
+            this.IsCompared = true;
+            return this.IsCompared;
         }
 
         public void Dispose()

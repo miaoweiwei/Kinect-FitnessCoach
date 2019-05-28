@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using FitnessCoach.Properties;
 using FitnessCoach.Util;
 using Microsoft.Kinect;
 using Brushes = System.Windows.Media.Brushes;
@@ -157,9 +159,16 @@ namespace FitnessCoach.BoneNode
 
                 this.DrawBody(joints3, joints2, dc, boneDrawPen);
                 this.DrawBoneAngle(joints3, joints2, dc, Brushes.White);
+
+                //TODO 显示手
+                Size s = new Size(Resources.hand.Width, Resources.hand.Height);
+                Point p = new Point(joints2[JointType.WristRight].X - s.Width / 2, joints2[JointType.WristRight].Y - s.Height / 2);
+                Rect r = new Rect(p, s);
+                ImageSource image = Tools.BitmapToBitmapImage(Resources.hand);
+                dc.DrawImage(image, r);
             }
         }
-
+        
         /// <summary>
         /// 画边框
         /// </summary>
