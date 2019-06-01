@@ -1,0 +1,134 @@
+﻿<Window x:Class="ActionRecording.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ActionRecording"
+        mc:Ignorable="d"
+        Background="#ff444449"
+        Title="动作录制" Height="500" Width="500"
+        Loaded="MainWindow_OnLoaded"
+        Closing="MainWindow_OnClosing">
+    <Window.Resources>
+        <SolidColorBrush x:Key="StartPageColor" Color="#ff444449" />
+        <SolidColorBrush x:Key="LabBtnBackGroundColor" Color="#ff444449" />
+        <SolidColorBrush x:Key="LabBtnForegroundColor" Color="#ff00BCF2" />
+        <SolidColorBrush x:Key="ListBoxBackGroundColor" Color="#ff444449" />
+        <SolidColorBrush x:Key="ListBoxForegroundColor" Color="#ff00BCF2" />
+        <SolidColorBrush x:Key="SelectedBackGroundColor" Color="#ff3D5A6C" />
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0">
+            <MenuItem Header="文件">
+                <MenuItem Name="NewModel" Header="新建模型" />
+                <Separator />
+                <MenuItem Name="MenuOpen" Header="打开模型" />
+                <MenuItem Name="Save" Header="保存模型" />
+                <Separator />
+                <MenuItem Name="Delete" Header="删除模型" />
+            </MenuItem>
+            <MenuItem Header="编辑">
+                <MenuItem Header="编辑" />
+            </MenuItem>
+        </Menu>
+        <ToolBar Grid.Row="1" Name="ModelToolBar" Visibility="Collapsed"
+                 Background="{StaticResource LabBtnBackGroundColor}">
+            <Button Name="BtnSave" Content="保存" Foreground="White" PreviewMouseLeftButtonDown="BtnSave_OnPreviewMouseLeftButtonDown"/>
+            <Button Name="BtnSelectJoint" Content="选择对比关节" Foreground="White" PreviewMouseLeftButtonDown="BtnSelectJoint_OnPreviewMouseLeftButtonDown"/>
+            <Button Name="BtnSelectKeyBone" Content="选择关键骨骼" Foreground="White" PreviewMouseLeftButtonDown="BtnSelectKeyBone_OnPreviewMouseLeftButtonDown"/>
+            <Button Name="BtnStartRecording" Content="开始录制" Foreground="White" PreviewMouseLeftButtonDown="BtnStartRecording_OnPreviewMouseLeftButtonDown"/>
+        </ToolBar>
+
+        <Grid Grid.Row="2">
+            <Border Name="StartPageBorder" Background="{StaticResource StartPageColor}">
+                <Grid Name="Grid" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" Name="LabOpenModel" Content="打开模型" FontSize="20" Margin="0 3 3 3"
+                               Foreground="{StaticResource LabBtnForegroundColor}"
+                               Background="{StaticResource LabBtnBackGroundColor}"
+                               BorderThickness="0"
+                               MouseEnter="LabBtnModel_OnMouseEnter"
+                               MouseLeave="LabBtnModel_OnMouseLeave"
+                               PreviewMouseLeftButtonDown="LabBtnOpenModel_OnClick" />
+                        <Label Grid.Column="1" Name="LabNewModel" Content="新建模型" FontSize="20" Margin="3"
+                               Foreground="{StaticResource LabBtnForegroundColor}"
+                               Background="{StaticResource LabBtnBackGroundColor}"
+                               BorderThickness="0"
+                               MouseEnter="LabBtnModel_OnMouseEnter"
+                               MouseLeave="LabBtnModel_OnMouseLeave"
+                               PreviewMouseLeftButtonDown="LabNewModel_OnClick" />
+                    </Grid>
+                    <TextBlock Grid.Row="1" Text="最近" FontSize="20" Margin="5" Foreground="White" />
+                    <Grid Grid.Row="2" Margin="5">
+                        <ListBox Name="HistoryRecord"
+                                 Background="{StaticResource ListBoxBackGroundColor}"
+                                 Foreground="{StaticResource ListBoxForegroundColor}"
+                                 BorderThickness="0">
+                            <ListBoxItem Content="hah" />
+                            <ListBoxItem Content="hah" />
+                        </ListBox>
+                    </Grid>
+
+                </Grid>
+            </Border>
+
+            <Viewbox Name="TemplateViewBox" Visibility="Collapsed">
+                <Image Name="BoneModelImage" Source="{Binding TemplateImageSource}" Stretch="UniformToFill"
+                       PreviewMouseLeftButtonDown="BoneModelImage_OnPreviewMouseLeftButtonDown" />
+            </Viewbox>
+
+            <Viewbox Name="BodyViewBox" Visibility="Collapsed">
+                <!--骨骼图-->
+                <Image Name="BodyImage" Source="{Binding BodyImageSource}" Stretch="UniformToFill" />
+            </Viewbox>
+        </Grid>
+
+        <StatusBar Name="AppStatusBar" Grid.Row="3" Visibility="Collapsed">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="5" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="5" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+
+            <StatusBarItem Grid.Column="0">
+                <!--状态-->
+                <TextBlock Name="StateText" />
+            </StatusBarItem>
+
+            <Separator Grid.Column="1" />
+
+            <StatusBarItem Grid.Column="2">
+                <TextBlock Name="DurationText" />
+            </StatusBarItem>
+
+            <Separator Grid.Column="3" />
+
+            <StatusBarItem Grid.Column="4">
+                <TextBlock Name="FrameCountText" />
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>

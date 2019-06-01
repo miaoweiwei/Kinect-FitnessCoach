@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessCoach", "FitnessCoac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestWinForm", "TestWinForm\TestWinForm.csproj", "{53BF497C-D4DB-4D48-A953-73E380059362}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActionRecording", "ActionRecording\ActionRecording.csproj", "{871AFD9A-2B09-4621-B6A8-9A1303A98E0D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{53BF497C-D4DB-4D48-A953-73E380059362}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53BF497C-D4DB-4D48-A953-73E380059362}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53BF497C-D4DB-4D48-A953-73E380059362}.Release|Any CPU.Build.0 = Release|Any CPU
+		{871AFD9A-2B09-4621-B6A8-9A1303A98E0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{871AFD9A-2B09-4621-B6A8-9A1303A98E0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{871AFD9A-2B09-4621-B6A8-9A1303A98E0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{871AFD9A-2B09-4621-B6A8-9A1303A98E0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
