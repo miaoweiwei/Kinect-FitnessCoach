@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using FitnessCoach.Properties;
 using FitnessCoach.Util;
 using Microsoft.Kinect;
 using Brushes = System.Windows.Media.Brushes;
@@ -14,7 +17,7 @@ namespace FitnessCoach.BoneNode
     /// <summary>
     /// 骨骼
     /// </summary>
-    internal class Skeleton
+    public class Skeleton
     {
         /// <summary>
         ///  边缘矩形的厚度
@@ -63,7 +66,8 @@ namespace FitnessCoach.BoneNode
             Brushes.Indigo,
             Brushes.Violet,
         };
-
+        private Pen _joinDefaultPen = new Pen(Brushes.Aqua, 1);
+        private Pen _joinSelectPen = new Pen(Brushes.Yellow, 1);
         public Skeleton(int displayWidth, int displayHeight, CoordinateMapper coordinateMapper)
         {
             this.DisplayWidth = displayWidth;
@@ -100,6 +104,35 @@ namespace FitnessCoach.BoneNode
             return keyBones;
         }
 
+        /// <summary>
+        /// 获取所有关节的角度
+        /// </summary>
+        /// <param name="joints3">关节的三维坐标</param>
+        /// <returns></returns>
+        public static List<JointAngle> GetBodyJointAngleList(IReadOnlyDictionary<JointType, Joint> joints3)
+        {
+            List<JointAngle> jointAngles = new List<JointAngle>();
+            //骨头字典
+            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
+            //关节字典
+            Dictionary<JointType, Tuple<Bone, Bone>> jointDic = SkeletonDictionary.GetJointDic();
+
+            foreach (KeyValuePair<JointType, Tuple<Bone, Bone>> pair in jointDic)
+            {
+                Tuple<JointType, JointType> bondVectorTuple1 = boneDic[pair.Value.Item1];
+                Tuple<JointType, JointType> bondVectorTuple2 = boneDic[pair.Value.Item2];
+
+                CameraSpacePoint vector1 = VectorHelp.GetVector(joints3[bondVectorTuple1.Item1].Position,
+                    joints3[bondVectorTuple1.Item2].Position);
+                CameraSpacePoint vector2 = VectorHelp.GetVector(joints3[bondVectorTuple2.Item2].Position,
+                    joints3[bondVectorTuple2.Item1].Position);
+
+                float angle = VectorHelp.GetVectorAngle(vector1, vector2);
+                jointAngles.Add(new JointAngle(pair.Key, angle));
+            }
+
+            return jointAngles;
+        }
 
         /// <summary>
         /// 画出多个人的骨骼框架
@@ -121,42 +154,83 @@ namespace FitnessCoach.BoneNode
         /// <param name="dc"></param>
         public void DrawBody(Body body, int bodyIndex, DrawingContext dc)
         {
-            if (body.IsTracked) //判断这个人是不是已经被跟踪到
+            if (!body.IsTracked)
+                return;
+            this.DrawClippedEdges(body, dc); //画出边框
+            //获取骨骼节点的三维坐标
+            IReadOnlyDictionary<JointType, Joint> bodyJoints = body.Joints;
+            //var bodyJointOrientations = body.JointOrientations;
+            CameraSpacePoint positionSpineMid = bodyJoints[JointType.SpineMid].Position;
+            double num = positionSpineMid.Z;
+            //设置骨骼的画笔
+            Pen boneDrawPen = new Pen(this.BodyBrushes[bodyIndex], this.BonePenMaxSize / num);
+
+            //将关节点转换为2D深度（显示）空间
+            Dictionary<JointType, Joint2D> joints2 = JointToJoint2Ds(bodyJoints);
+            // 指定 JointType.SpineMid 为坐标原点的三维空间坐标
+            Dictionary<JointType, Joint> joints3 = new Dictionary<JointType, Joint>();
+            foreach (KeyValuePair<JointType, Joint> pair in bodyJoints)
             {
-                this.DrawClippedEdges(body, dc); //画出边框
-                //获取骨骼节点的三维坐标
-                IReadOnlyDictionary<JointType, Joint> bodyJoints = body.Joints;
-                //var bodyJointOrientations = body.JointOrientations;
-                CameraSpacePoint positionSpineMid = bodyJoints[JointType.SpineMid].Position;
-                double num = positionSpineMid.Z;
-                //设置骨骼的画笔
-                Pen boneDrawPen = new Pen(this.BodyBrushes[bodyIndex], this.BonePenMaxSize / num);
-
-                //将关节点转换为2D深度（显示）空间
-                Dictionary<JointType, Point> joints2 = new Dictionary<JointType, Point>();
-                // 指定 JointType.SpineMid 为坐标原点的三维空间坐标
-                Dictionary<JointType, Joint> joints3 = new Dictionary<JointType, Joint>();
-
-                foreach (KeyValuePair<JointType, Joint> pair in bodyJoints)
+                joints3[pair.Key] = new Joint()
                 {
-                    //有时，推断关节的深度（Z）可能显示为负数
-                    CameraSpacePoint position = pair.Value.Position;
-                    if (position.Z < 0) //深度为负值时
-                        position.Z = InferredZPositionClamp;
-                    ColorSpacePoint colorSpacePoint = CoordinateMapper.MapCameraPointToColorSpace(position);
-                    joints2[pair.Key] = new Point(colorSpacePoint.X, colorSpacePoint.Y);
-                    Joint jointTemp = new Joint()
-                    {
-                        JointType = pair.Value.JointType,
-                        TrackingState = pair.Value.TrackingState,
-                        //变换指定原点坐标，以JointType.SpineMid为坐标原点
-                        Position = VectorHelp.GetSubtract(pair.Value.Position, positionSpineMid),
-                    };
-                    joints3.Add(pair.Key, jointTemp);
-                }
+                    JointType = pair.Value.JointType,
+                    TrackingState = pair.Value.TrackingState,
+                    //变换指定原点坐标，以JointType.SpineMid为坐标原点
+                    Position = VectorHelp.GetSubtract(pair.Value.Position, positionSpineMid),
+                };
+            }
 
-                this.DrawBody(joints3, joints2, dc, boneDrawPen);
-                this.DrawBoneAngle(joints3, joints2, dc, Brushes.White);
+            DrawJointCircle(dc, joints2, null, _joinDefaultPen, _joinSelectPen);
+
+            List<Joint2D> jointList = joints2.Values.ToList();
+            string str = XmlUtil.Serializer(jointList);
+
+            this.DrawBody(joints2, dc, boneDrawPen);
+            this.DrawBoneAngle(joints3, joints2, dc, Brushes.White);
+            ////TODO 显示手
+            //Size s = new Size(Resources.hand.Width, Resources.hand.Height);
+            //Point p = new Point(joints2[JointType.WristRight].Position.X - s.Width / 2,
+            //    joints2[JointType.WristRight].Position.Y - s.Height / 2);
+            //Rect r = new Rect(p, s);
+            //ImageSource image = Tools.BitmapToBitmapImage(Resources.hand);
+            //dc.DrawImage(image, r);
+        }
+
+        public Dictionary<JointType, Joint2D> JointToJoint2Ds(IReadOnlyDictionary<JointType, Joint> bodyJoints)
+        {
+            //将关节点转换为2D深度（显示）空间
+            Dictionary<JointType, Joint2D> joints2 = new Dictionary<JointType, Joint2D>();
+            foreach (KeyValuePair<JointType, Joint> pair in bodyJoints)
+            {
+                //有时，推断关节的深度（Z）可能显示为负数
+                CameraSpacePoint position = pair.Value.Position;
+                if (position.Z < 0) //深度为负值时
+                    position.Z = InferredZPositionClamp;
+                //ColorSpacePoint colorSpacePoint = CoordinateMapper.MapCameraPointToColorSpace(position);
+                //将相机点映射到2D深度空间
+                DepthSpacePoint depthSpacePoint = this.CoordinateMapper.MapCameraPointToDepthSpace(position);
+                joints2[pair.Key] = new Joint2D()
+                {
+                    Joint2DType = pair.Key,
+                    //Position = new Point(colorSpacePoint.X, colorSpacePoint.Y),
+                    Position = new Point(depthSpacePoint.X, depthSpacePoint.Y),
+                    TrackingState = pair.Value.TrackingState
+                };
+            }
+
+            return joints2;
+        }
+
+        public void DrawJointCircle(DrawingContext dc,Dictionary<JointType, Joint2D> joints2, List<JointType> selectJoint,
+            Pen joinDefaultPen, Pen joinSelectPen)
+        {
+            foreach (KeyValuePair<JointType, Joint2D> pair in joints2)
+            {
+                if (selectJoint != null && selectJoint.Contains(pair.Key)) //选中的关节
+                    dc.DrawEllipse(joinSelectPen.Brush, joinSelectPen, pair.Value.Position, 5, 5);
+                else //没有选中的关节
+                    dc.DrawEllipse(joinDefaultPen.Brush, joinDefaultPen, pair.Value.Position, 4, 4);
+
             }
         }
 
@@ -211,24 +285,23 @@ namespace FitnessCoach.BoneNode
         /// <param name="jointPoints"></param>
         /// <param name="drawingContext"></param>
         /// <param name="drawingPen"></param>
-        private void DrawBody(IReadOnlyDictionary<JointType, Joint> joints3, IDictionary<JointType, Point> jointPoints,
-            DrawingContext drawingContext, Pen drawingPen)
+        public void DrawBody(Dictionary<JointType, Joint2D> jointPoints, DrawingContext drawingContext, Pen drawingPen)
         {
             //画出骨头
             Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
             foreach (KeyValuePair<Bone, Tuple<JointType, JointType>> boneValuePair in boneDic)
             {
                 Tuple<JointType, JointType> bone = boneValuePair.Value;
-                this.DrawBone(joints3, jointPoints, bone.Item1, bone.Item2, drawingContext, drawingPen);
+                this.DrawBone(jointPoints, bone, drawingContext, drawingPen);
             }
         }
 
         //画一个骨头
-        private void DrawBone(IReadOnlyDictionary<JointType, Joint> joints3, IDictionary<JointType, Point> jointPoints,
-            JointType jointType0, JointType jointType1, DrawingContext drawingContext, Pen drawingPen)
+        private void DrawBone(Dictionary<JointType, Joint2D> jointPoints, Tuple<JointType, JointType> bone,
+            DrawingContext drawingContext, Pen drawingPen)
         {
-            Joint joint0 = joints3[jointType0];
-            Joint joint1 = joints3[jointType1];
+            Joint2D joint0 = jointPoints[bone.Item1];
+            Joint2D joint1 = jointPoints[bone.Item2];
 
             // 有可能某个关节点不在相机的拍摄范围里，如果我们找不到这些关节中的任何一个，就退出
             if (joint0.TrackingState == TrackingState.NotTracked ||
@@ -239,13 +312,13 @@ namespace FitnessCoach.BoneNode
             if ((joint0.TrackingState == TrackingState.Tracked) && (joint1.TrackingState == TrackingState.Tracked))
                 drawPen = drawingPen; //跟踪到了就用当前的画笔
             //连接两个节点
-            drawingContext.DrawLine(drawPen, jointPoints[jointType0], jointPoints[jointType1]);
+            drawingContext.DrawLine(drawPen, joint0.Position, joint1.Position);
         }
 
         /// <summary>
         /// 显示角度
         /// </summary>
-        public void DrawBoneAngle(IReadOnlyDictionary<JointType, Joint> joints3, IDictionary<JointType, Point> joints,
+        public void DrawBoneAngle(IReadOnlyDictionary<JointType, Joint> joints3, Dictionary<JointType, Joint2D> joints,
             DrawingContext dc, Brush foreground)
         {
             //关节的角度
@@ -253,7 +326,7 @@ namespace FitnessCoach.BoneNode
 
             foreach (JointAngle jointAngle in jointAngles)
             {
-                Point point = joints[jointAngle.Name];
+                Point point = joints[jointAngle.Name].Position;
                 // 基于设置的属性集创建格式化的文字。        
                 FormattedText formattedText = new FormattedText(
                     jointAngle.Angle.ToString("f4"), //保留三位小数
@@ -264,60 +337,6 @@ namespace FitnessCoach.BoneNode
                     foreground);
                 dc.DrawText(formattedText, point);
             }
-        }
-
-        public static List<JointAngle> GetBodyJointAngleList(IReadOnlyDictionary<JointType, Joint> joints3)
-        {
-            List<JointAngle> jointAngles = new List<JointAngle>();
-            //骨头字典
-            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
-            //关节字典
-            Dictionary<JointType, Tuple<Bone, Bone>> jointDic = SkeletonDictionary.GetJointDic();
-
-            foreach (KeyValuePair<JointType, Tuple<Bone, Bone>> pair in jointDic)
-            {
-                Tuple<JointType, JointType> bondVectorTuple1 = boneDic[pair.Value.Item1];
-                Tuple<JointType, JointType> bondVectorTuple2 = boneDic[pair.Value.Item2];
-
-                CameraSpacePoint vector1 = VectorHelp.GetVector(joints3[bondVectorTuple1.Item1].Position,
-                    joints3[bondVectorTuple1.Item2].Position);
-                CameraSpacePoint vector2 = VectorHelp.GetVector(joints3[bondVectorTuple2.Item2].Position,
-                    joints3[bondVectorTuple2.Item1].Position);
-
-                float angle = VectorHelp.GetVectorAngle(vector1, vector2);
-                jointAngles.Add(new JointAngle(pair.Key, angle));
-            }
-
-            return jointAngles;
-        }
-
-        /// <summary>
-        /// 计算关节的角度
-        /// </summary>
-        /// <param name="joints3">关节的三维坐标</param>
-        /// <returns></returns>
-        public static Dictionary<JointType, float> GetBodyJointAngleDic(IReadOnlyDictionary<JointType, Joint> joints3)
-        {
-            Dictionary<JointType, float> jointAngleDic = new Dictionary<JointType, float>();
-            //骨头字典
-            Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
-            //关节字典
-            Dictionary<JointType, Tuple<Bone, Bone>> jointDic = SkeletonDictionary.GetJointDic();
-            foreach (KeyValuePair<JointType, Tuple<Bone, Bone>> pair in jointDic)
-            {
-                Tuple<JointType, JointType> bondVectorTuple1 = boneDic[pair.Value.Item1];
-                Tuple<JointType, JointType> bondVectorTuple2 = boneDic[pair.Value.Item2];
-
-                CameraSpacePoint vector1 = VectorHelp.GetVector(joints3[bondVectorTuple1.Item1].Position,
-                    joints3[bondVectorTuple1.Item2].Position);
-                CameraSpacePoint vector2 = VectorHelp.GetVector(joints3[bondVectorTuple2.Item2].Position,
-                    joints3[bondVectorTuple2.Item1].Position);
-
-                float angle = VectorHelp.GetVectorAngle(vector1, vector2);
-                jointAngleDic.Add(pair.Key, angle);
-            }
-
-            return jointAngleDic;
         }
     }
 }

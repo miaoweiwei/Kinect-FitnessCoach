@@ -217,7 +217,6 @@ namespace FitnessCoach.View
             this.kinectSensor.Open();
 
             this.StatusText = "Kinect不可用!";
-            this.DataContext = this;
         }
 
         private void BodyFrameReader_FrameArrived(object sender, BodyFrameArrivedEventArgs e)
@@ -308,11 +307,11 @@ namespace FitnessCoach.View
                     List<RecognitionResult> resList = attitudeRecognition.Identification(body.Joints);
                     string resultStr = "";
                     foreach (RecognitionResult result in resList)
-                    {
                         resultStr += $"姿态：{result.AttitudeName};提示信息：{string.Join(",", result.InfoMessages)}\r";
-                    }
-                    
-                    RecognitionResultText = !string.IsNullOrEmpty(resultStr) ? resultStr : resultStr.Remove(resultStr.Length - 1);
+
+                    RecognitionResultText = !string.IsNullOrEmpty(resultStr)
+                        ? resultStr
+                        : resultStr.Remove(resultStr.Length - 1);
                 }
             }
         }

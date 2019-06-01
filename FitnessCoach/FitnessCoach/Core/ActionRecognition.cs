@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Documents;
 using FitnessCoach.BoneNode;
 using FitnessCoach.Config;
 using FitnessCoach.Util;
@@ -14,40 +11,37 @@ using Microsoft.Kinect;
 
 namespace FitnessCoach.Core
 {
-    /// <summary>
-    /// 姿态识别类
-    /// </summary>
-    public class AttitudeRecognition
+    public class ActionRecognition
     {
-        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger("AttitudeRecognition");
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger("ActionRecognition");
 
         /// <summary>
         /// 模型的文件夹
         /// </summary>
-        public string DirPath { get; set; } = GlobalConfig.ModelDirPath;
+        public string DirPath { get; set; } = GlobalConfig.ActionModelDirPath;
 
         /// <summary>
-        /// 要识别的模型列表
+        /// 要识别的动作模型列表
         /// </summary>
-        public List<AttitudeModel> ModelList { get; set; }
+        public List<ActionModel> ModelList { get; set; }
 
         #region 单例
 
-        private static AttitudeRecognition _instance = null;
+        private static ActionRecognition _instance = null;
         private static readonly object SyncRoot = new object();
 
         /// <summary>
-        /// 用单例的模式获取姿态识别类<see cref="AttitudeRecognition"/>
+        /// 用单例的模式获取动作识别类<see cref="ActionRecognition"/>
         /// </summary>
         /// <returns></returns>
-        public static AttitudeRecognition GetAttitudeRecognition()
+        public static ActionRecognition GetActionRecognition()
         {
             if (_instance == null)
             {
                 lock (SyncRoot)
                 {
                     if (_instance == null)
-                        _instance = new AttitudeRecognition();
+                        _instance = new ActionRecognition();
                 }
             }
 
@@ -56,9 +50,9 @@ namespace FitnessCoach.Core
 
         #endregion
 
-        private AttitudeRecognition()
+        private ActionRecognition()
         {
-            ModelList = new List<AttitudeModel>();
+            ModelList = new List<ActionModel>();
             this.LoadModel(DirPath);
         }
 
@@ -87,14 +81,17 @@ namespace FitnessCoach.Core
         /// <param name="filePath"></param>
         public void LoadModelFromFile(string filePath)
         {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                Log.Debug($"指定的模型文件路径为空！");
+                return;
+            }
+
             if (!File.Exists(filePath))
             {
                 Log.Debug($"指定的模型文件:{filePath} 不存在！");
                 return;
             }
-
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
-                return;
 
             try
             {
@@ -103,7 +100,8 @@ namespace FitnessCoach.Core
             }
             catch (Exception ex)
             {
-                Log.Error($"模型加载失败：{ex.Message};错误地址：{ex.StackTrace.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries)[0].Trim()}");
+                Log.Error(
+                    $"模型加载失败：{ex.Message};错误地址：{ex.StackTrace.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries)[0].Trim()}");
             }
         }
 
@@ -119,14 +117,14 @@ namespace FitnessCoach.Core
                 return;
             }
 
-            AttitudeModel attitude = XmlUtil.Deserialize<AttitudeModel>(modelXmlStr);
-            if (this.ModelList.Exists(o => o.AttitudeName == attitude.AttitudeName))
+            ActionModel action = XmlUtil.Deserialize<ActionModel>(modelXmlStr);
+            if (this.ModelList.Exists(o => o.ActionName == action.ActionName))
             {
-                int index = this.ModelList.FindIndex(o => o.AttitudeName == attitude.AttitudeName);
-                this.ModelList[index] = attitude;
+                int index = this.ModelList.FindIndex(o => o.ActionName == action.ActionName);
+                this.ModelList[index] = action;
             }
             else
-                this.ModelList.Add(attitude);
+                this.ModelList.Add(action);
         }
 
         /// <summary>
@@ -139,18 +137,10 @@ namespace FitnessCoach.Core
             List<JointAngle> jointAngles = Skeleton.GetBodyJointAngleList(joints3);
 
             List<RecognitionResult> resultList = new List<RecognitionResult>();
-            foreach (AttitudeModel model in ModelList)
+            foreach (ActionModel model in ModelList)
             {
-                //if (model.Compared(jointAngles, keyBones, out RecognitionResult result))
-                //{
-                //    resultList.Add(result);
-                //}
                 model.Compared(jointAngles, keyBones, out RecognitionResult result);
                 resultList.Add(result);
-
-                //KeyBone k = keyBones.First(o => o.Name == model.KeyBones[0].Name);
-                //Debug.WriteLine($"识别结果:{k.Name},X:{k.AngleX},Y:{k.AngleY},Z:{k.AngleZ}");
-                //Debug.WriteLine($"提示信息:{msg}");
             }
 
             return resultList;

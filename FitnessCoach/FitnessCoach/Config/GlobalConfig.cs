@@ -24,6 +24,16 @@ namespace FitnessCoach.Config
         public static string ModelDirPath;
 
         /// <summary>
+        /// 动作模型文件的文件夹路径
+        /// </summary>
+        public static string ActionModelDirPath;
+
+        /// <summary>
+        /// 模板文件路径
+        /// </summary>
+        public static string TemplateModelPath;
+
+        /// <summary>
         /// KinectSensor
         /// </summary>
         public static KinectSensor Sensor { get; private set; }
@@ -53,6 +63,12 @@ namespace FitnessCoach.Config
                 var config = ConfigurationManager.OpenExeConfiguration(ConfigPath);
                 string modelPath = config.AppSettings.Settings["ModelDirPath"].Value;
                 ModelDirPath = string.IsNullOrEmpty(modelPath) ? appDomain.BaseDirectory + "Model" : modelPath;
+
+                string actionModelDirPath = config.AppSettings.Settings["ActionModelDirPath"].Value;
+                ActionModelDirPath = string.IsNullOrEmpty(actionModelDirPath)? appDomain.BaseDirectory + "Model" : actionModelDirPath;
+
+                string templateModelPath = config.AppSettings.Settings["ActionModelDirPath"].Value;
+                TemplateModelPath = string.IsNullOrEmpty(templateModelPath) ? appDomain.BaseDirectory + "Model/"+ "Template.model" : templateModelPath;
             }
             catch (Exception ex)
             {
