@@ -77,7 +77,10 @@ namespace FitnessCoach.Core
             string[] filePathArr = Directory.GetFiles(dirPath);
             foreach (string filePath in filePathArr)
             {
-                LoadModelFromFile(filePath);
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                int index = fileName.LastIndexOf('_');
+                if (fileName.Substring(index + 1) == "Attitude")
+                    LoadModelFromFile(filePath);
             }
         }
 
@@ -103,7 +106,8 @@ namespace FitnessCoach.Core
             }
             catch (Exception ex)
             {
-                Log.Error($"模型加载失败：{ex.Message};错误地址：{ex.StackTrace.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries)[0].Trim()}");
+                Log.Error(
+                    $"模型加载失败：{ex.Message};错误地址：{ex.StackTrace.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries)[0].Trim()}");
             }
         }
 

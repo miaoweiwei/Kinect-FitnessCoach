@@ -71,7 +71,10 @@ namespace FitnessCoach.Core
             string[] filePathArr = Directory.GetFiles(dirPath);
             foreach (string filePath in filePathArr)
             {
-                LoadModelFromFile(filePath);
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                int index = fileName.LastIndexOf('_');
+                if (fileName.Substring(index + 1) == "Action")
+                    LoadModelFromFile(filePath);
             }
         }
 
