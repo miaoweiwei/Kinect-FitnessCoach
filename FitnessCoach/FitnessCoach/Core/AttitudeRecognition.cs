@@ -19,8 +19,6 @@ namespace FitnessCoach.Core
     /// </summary>
     public class AttitudeRecognition
     {
-        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger("AttitudeRecognition");
-
         /// <summary>
         /// 模型的文件夹
         /// </summary>
@@ -70,7 +68,7 @@ namespace FitnessCoach.Core
         {
             if (!Directory.Exists(dirPath))
             {
-                Log.Debug($"指定的模型文件夹:{dirPath} 不存在！");
+                LogUtil.Debug(this,$"指定的模型文件夹:{dirPath} 不存在！");
                 return;
             }
 
@@ -92,7 +90,7 @@ namespace FitnessCoach.Core
         {
             if (!File.Exists(filePath))
             {
-                Log.Debug($"指定的模型文件:{filePath} 不存在！");
+                LogUtil.Debug(this, $"指定的模型文件:{filePath} 不存在！");
                 return;
             }
 
@@ -106,8 +104,7 @@ namespace FitnessCoach.Core
             }
             catch (Exception ex)
             {
-                Log.Error(
-                    $"模型加载失败：{ex.Message};错误地址：{ex.StackTrace.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries)[0].Trim()}");
+                LogUtil.Error(this,ex);
             }
         }
 
@@ -119,7 +116,7 @@ namespace FitnessCoach.Core
         {
             if (string.IsNullOrEmpty(modelXmlStr))
             {
-                Log.Debug($"指定的模型XML字符串不能为空！");
+                LogUtil.Debug(this, "指定的模型XML字符串不能为空！");
                 return;
             }
 

@@ -16,7 +16,6 @@ namespace FitnessCoach
     /// </summary>
     public partial class App : Application
     {
-        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger("App");
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -29,7 +28,7 @@ namespace FitnessCoach
 
         private void Current_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
-            Log.Error($"程序发生错误：{e.Exception.Message};错误地址：{e.Exception.StackTrace.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries)[0].Trim()}");
+            LogUtil.Error(this,e.Exception);
         }
 
         private void Current_Deactivated(object sender, EventArgs e)

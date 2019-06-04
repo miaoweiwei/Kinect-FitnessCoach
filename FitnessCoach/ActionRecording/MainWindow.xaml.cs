@@ -28,15 +28,14 @@ namespace ActionRecording
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(MainWindow).FullName);
         private OpenFileDialog openFileDialog;
         private SaveFileDialog saveFileDialog;
         private List<Joint2D> templateJoint2Ds;
 
-        private ActionModel actionModel;
+        private ActionModel actionModel; //动作模型
 
-        private List<JointType> recordingJointTypes; //记录用于对比的关节
-        private List<Bone> recordingBones; //记录用于对比的骨骼
+        //private List<JointType> recordingJointTypes; //记录用于对比的关节
+        //private List<Bone> recordingBones; //记录用于对比的骨骼
 
         private bool isRecording; //是否开始录制
         private ulong tracked;
@@ -203,10 +202,11 @@ namespace ActionRecording
             {
                 Rect r = new Rect(0.0, 0.0, displayWidth, displayHeight);
                 dc.DrawRectangle(_bodyBackGroundColor, null, r);
+                Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
                 for (int i = 0; i < bodies.Length; i++)
                 {
                     Body body = bodies[i];
-                    skeleton.DrawBody(body, i, dc);
+
                     if (tracked == 0)
                         tracked = body.IsTracked ? body.TrackingId : 0;
 
@@ -222,25 +222,41 @@ namespace ActionRecording
                     }
 
                     Dictionary<JointType, Joint2D> joint2Ds = skeleton.JointToJoint2Ds(body.Joints);
+
+                    //画出骨头
+                    foreach (KeyValuePair<Bone, Tuple<JointType, JointType>> boneValuePair in boneDic)
+                    {
+                        Tuple<JointType, JointType> bone = boneValuePair.Value;
+                        Joint2D joint0 = joint2Ds[bone.Item1];
+                        Joint2D joint1 = joint2Ds[bone.Item2];
+                        //连接两个节点
+                        if (actionModel.KeyBones != null && actionModel.KeyBones.Contains(boneValuePair.Key))
+                            dc.DrawLine(_boneSelectPen, joint0.Position, joint1.Position);
+                        else
+                            dc.DrawLine(_bonePen, joint0.Position, joint1.Position);
+                    }
+
                     //画关节点的圆
                     foreach (KeyValuePair<JointType, Joint2D> pair in joint2Ds)
                     {
-                        if (recordingJointTypes != null && recordingJointTypes.Contains(pair.Value.Joint2DType)) //选中的关节
+                        if (actionModel.JointAngles != null &&
+                            actionModel.JointAngles.Contains(pair.Value.Joint2DType)) //选中的关节
                             dc.DrawEllipse(_joinSelectPen.Brush, _joinSelectPen, pair.Value.Position, 6, 6);
                         else //没有选中的关节
                             dc.DrawEllipse(_joinDefaultPen.Brush, _joinDefaultPen, pair.Value.Position, 5, 5);
                     }
                 }
 
+                #region //画出模板
+
                 //画出骨头
-                Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
                 foreach (KeyValuePair<Bone, Tuple<JointType, JointType>> boneValuePair in boneDic)
                 {
                     Tuple<JointType, JointType> bone = boneValuePair.Value;
                     Joint2D joint0 = templateJoint2Ds.First(o => o.Joint2DType == bone.Item1);
                     Joint2D joint1 = templateJoint2Ds.First(o => o.Joint2DType == bone.Item2);
                     //连接两个节点
-                    if (recordingJointTypes != null && recordingBones.Contains(boneValuePair.Key))
+                    if (actionModel.KeyBones != null && actionModel.KeyBones.Contains(boneValuePair.Key))
                         dc.DrawLine(_boneSelectPen, joint0.Position, joint1.Position);
                     else
                         dc.DrawLine(_bonePen, joint0.Position, joint1.Position);
@@ -248,11 +264,14 @@ namespace ActionRecording
 
                 foreach (Joint2D joint2D in templateJoint2Ds)
                 {
-                    if (recordingJointTypes != null && recordingJointTypes.Contains(joint2D.Joint2DType)) //选中的关节
+                    if (actionModel.JointAngles != null &&
+                        actionModel.JointAngles.Contains(joint2D.Joint2DType)) //选中的关节
                         dc.DrawEllipse(_joinSelectPen.Brush, _joinSelectPen, joint2D.Position, 6, 6);
                     else //没有选中的关节
                         dc.DrawEllipse(_joinDefaultPen.Brush, _joinDefaultPen, joint2D.Position, 5, 5);
                 }
+
+                #endregion
 
                 if (!string.IsNullOrEmpty(infomsg))
                     SetPromptInfo(dc, infomsg);
@@ -337,8 +356,6 @@ namespace ActionRecording
         {
             KinectEventCancelBind();
             kinectSensor.Close();
-            recordingJointTypes?.Clear();
-            recordingBones?.Clear();
             actionModel?.Dispose();
             actionModel = null;
             BtnRecording.Content = "开始录制";
@@ -348,33 +365,61 @@ namespace ActionRecording
 
         #endregion
 
+        #region 打开模型
+
         private void LabBtnOpenModel_OnClick(object sender, RoutedEventArgs e)
         {
             var result = openFileDialog.ShowDialog();
             if (result != true) return;
             string filePath = openFileDialog.FileName;
+            actionModel = LoadModelFromXml(filePath);
             //TODO 打开模型
             ModelToolBar.Visibility = Visibility.Visible;
         }
 
+        /// <summary> 加载模板 </summary>
+        private ActionModel LoadModelFromXml(string modelPath)
+        {
+            if (string.IsNullOrEmpty(modelPath) || !File.Exists(modelPath))
+            {
+                MessageBox.Show("模本文件丢失！");
+                return null;
+            }
+
+            try
+            {
+                string xmlStr = File.ReadAllText(modelPath);
+                ActionModel model = XmlUtil.Deserialize<ActionModel>(xmlStr);
+                return model;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+                return null;
+            }
+        }
+        
+        #endregion
+
         #region 新建模型
 
-        //加载模型
+        /// <summary> 加载模型 </summary>
         private void OpenTemplate()
         {
             using (DrawingContext dc = templateDrawingGroup.Open())
             {
                 Rect r = new Rect(0.0, 0.0, 400, 500);
                 dc.DrawRectangle(_templateBackGroundColor, null, r);
+
                 //画出骨头
                 Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
-                foreach (KeyValuePair<Bone, Tuple<JointType, JointType>> boneValuePair in boneDic)
+                foreach (KeyValuePair<Bone, Tuple<JointType, JointType>> bonePair in boneDic)
                 {
-                    Tuple<JointType, JointType> bone = boneValuePair.Value;
+                    Tuple<JointType, JointType> bone = bonePair.Value;
                     Joint2D joint0 = templateJoint2Ds.First(o => o.Joint2DType == bone.Item1);
                     Joint2D joint1 = templateJoint2Ds.First(o => o.Joint2DType == bone.Item2);
                     //连接两个节点
-                    if (recordingJointTypes != null && recordingBones.Contains(boneValuePair.Key))
+                    if (actionModel.KeyBones != null && actionModel.KeyBones.Contains(bonePair.Key))
                         dc.DrawLine(_boneSelectPen, joint0.Position, joint1.Position);
                     else
                         dc.DrawLine(_bonePen, joint0.Position, joint1.Position);
@@ -383,7 +428,8 @@ namespace ActionRecording
                 //画关节点的圆
                 foreach (Joint2D joint2D in templateJoint2Ds)
                 {
-                    if (recordingJointTypes != null && recordingJointTypes.Contains(joint2D.Joint2DType)) //选中的关节
+                    if (actionModel.JointAngles != null &&
+                        actionModel.JointAngles.Contains(joint2D.Joint2DType)) //选中的关节
                         dc.DrawEllipse(_joinSelectPen.Brush, _joinSelectPen, joint2D.Position, 5, 5);
                     else //没有选中的关节
                         dc.DrawEllipse(_joinDefaultPen.Brush, _joinDefaultPen, joint2D.Position, 4, 4);
@@ -399,10 +445,10 @@ namespace ActionRecording
         {
             Image control = sender as Image;
             Point point = e.GetPosition(control); //获取鼠标点击的位置
-            if (recordingJointTypes == null)
-                recordingJointTypes = new List<JointType>();
-            if (recordingBones == null)
-                recordingBones = new List<Bone>();
+            if (actionModel.JointAngles == null)
+                actionModel.JointAngles = new List<JointType>();
+            if (actionModel.KeyBones == null)
+                actionModel.KeyBones = new List<Bone>();
 
             bool idClickJoint = false;
 
@@ -413,10 +459,10 @@ namespace ActionRecording
                 if (JudgeChoiceJoint(joint2D.Position, point, 5))
                 {
                     idClickJoint = true;
-                    if (recordingJointTypes.Contains(joint2D.Joint2DType))
-                        recordingJointTypes.Remove(joint2D.Joint2DType);
+                    if (actionModel.JointAngles.Contains(joint2D.Joint2DType))
+                        actionModel.JointAngles.Remove(joint2D.Joint2DType);
                     else
-                        recordingJointTypes.Add(joint2D.Joint2DType);
+                        actionModel.JointAngles.Add(joint2D.Joint2DType);
                     break;
                 }
             }
@@ -439,10 +485,10 @@ namespace ActionRecording
                 //if (JudgeChoiceBone(p1, p2, point, 5))
                 if (JudgeChoiceBoneTest(p1, p2, point, 5))
                 {
-                    if (recordingBones.Contains(pair.Key))
-                        recordingBones.Remove(pair.Key);
+                    if (actionModel.KeyBones.Contains(pair.Key))
+                        actionModel.KeyBones.Remove(pair.Key);
                     else
-                        recordingBones.Add(pair.Key);
+                        actionModel.KeyBones.Add(pair.Key);
                     break;
                 }
             }
@@ -494,11 +540,19 @@ namespace ActionRecording
             double k = (p1.Y + p2.Y) / 2;
 
             Point vector = new Point(p1.X - p2.X, p1.Y - p2.Y);
+
             double pointMultiply = vector.X * targetPoint.X + vector.Y * targetPoint.Y;
             double lengthMultiply = Math.Sqrt(vector.X * vector.X + vector.Y * vector.Y) *
                                     Math.Sqrt(targetPoint.X * targetPoint.X + targetPoint.Y * targetPoint.Y);
+            //double pointMultiply = vector.X * 1 + vector.Y * 0;
+            //double lengthMultiply = Math.Sqrt(vector.X * vector.X + vector.Y * vector.Y) * Math.Sqrt(1 * 1 + 0 * 0);
+
+            //求椭圆主轴与X轴的旋转角
             double cosAngle = pointMultiply / lengthMultiply;
             double angle = Math.Acos(cosAngle); //长轴与X轴的夹角
+
+            double tempAngle = angle * 180 / Math.PI;
+
             double a = Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2)); //长轴长
 
             double A = a * a * Math.Pow(Math.Sin(angle), 2) + b * b * Math.Pow(Math.Cos(angle), 2);
@@ -519,6 +573,8 @@ namespace ActionRecording
         private void LabNewModel_OnClick(object sender, RoutedEventArgs e)
         {
             SwitchShowGrid(TemplateViewBox, ModelToolBar);
+            if (actionModel == null)
+                actionModel = new ActionModel();
             OpenTemplate();
             SetStateText("请选择关键的关节节点和骨骼");
         }
@@ -572,8 +628,7 @@ namespace ActionRecording
             }
             catch (Exception ex)
             {
-                Log.Error(
-                    $"程序发生错误：{ex.Message};错误地址：{ex.StackTrace.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries)[0].Trim()}");
+                LogUtil.Error(this, ex);
             }
 
             timer.Enabled = true;
@@ -610,7 +665,7 @@ namespace ActionRecording
         {
             if (!isRecording)
             {
-                actionModel = new ActionModel();
+                //actionModel = new ActionModel();
                 triggerCount = 5;
                 infomsg = $"请做好动作的开始姿态，{triggerCount}秒钟够开始录制！";
                 timer.Start();
@@ -634,10 +689,7 @@ namespace ActionRecording
             try
             {
                 actionModel.ActionName = ActionNameTbx.Text.Trim();
-                actionModel.JointAngles = recordingJointTypes;
-                actionModel.KeyBones = recordingBones;
-                float angularError = 0;
-                if (float.TryParse(AngularErrorTbx.Text.Trim(), out angularError))
+                if (float.TryParse(AngularErrorTbx.Text.Trim(), out var angularError))
                     actionModel.AllowableAngularError = angularError;
                 else
                 {
@@ -645,8 +697,7 @@ namespace ActionRecording
                     return;
                 }
 
-                float keyBoneError = 0;
-                if (float.TryParse(KeyBoneErrorTbx.Text.Trim(), out keyBoneError))
+                if (float.TryParse(KeyBoneErrorTbx.Text.Trim(), out var keyBoneError))
                     actionModel.AllowableKeyBoneError = keyBoneError;
                 else
                 {
@@ -663,8 +714,7 @@ namespace ActionRecording
             }
             catch (Exception ex)
             {
-                Log.Error(
-                    $"程序发生错误：{ex.Message};错误地址：{ex.StackTrace.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries)[0].Trim()}");
+                LogUtil.Error(this, ex);
             }
 
             SwitchShowGrid(SaveResultPage);
@@ -676,8 +726,8 @@ namespace ActionRecording
                 MessageBox.Show("是否确定要取消！", "取消", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (result == MessageBoxResult.Yes)
             {
-                recordingJointTypes?.Clear();
-                recordingBones?.Clear();
+                actionModel.JointAngles?.Clear();
+                actionModel.KeyBones?.Clear();
                 actionModel?.Dispose();
                 actionModel = null;
                 BtnRecording.Content = "开始录制";

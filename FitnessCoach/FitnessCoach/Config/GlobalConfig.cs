@@ -4,9 +4,11 @@ using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Text;
 using System.Windows.Forms;
+using FitnessCoach.Util;
 using log4net.Config;
 using Microsoft.Kinect;
 
@@ -14,7 +16,6 @@ namespace FitnessCoach.Config
 {
     public static class GlobalConfig
     {
-        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger("GlobalConfig");
 
         /// <summary>
         /// 模型文件的文件夹路径
@@ -59,7 +60,7 @@ namespace FitnessCoach.Config
         {
             try
             {
-                Log.Info("加载获取配置文件信息");
+                LogUtil.Info(typeof(GlobalConfig),"加载获取配置文件信息");
 
                 string startDir = AppDomain.CurrentDomain.BaseDirectory;
                 string modelDir = Path.Combine(startDir, "Model");
@@ -79,7 +80,7 @@ namespace FitnessCoach.Config
             }
             catch (Exception ex)
             {
-                Log.Error("初始化配置文件异常:" + ex.Message);
+                LogUtil.Error(typeof(GlobalConfig),ex);
             }
         }
 
