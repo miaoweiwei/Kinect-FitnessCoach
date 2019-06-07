@@ -11,18 +11,22 @@ using Microsoft.Kinect;
 
 namespace FitnessCoach.Core
 {
-    public class ActionRecognition
+    public class ActionRecognition : IDisposable
     {
-
         /// <summary>
         /// 模型的文件夹
         /// </summary>
-        public string DirPath { get; set; } = GlobalConfig.ActionModelDirPath;
+        public string DirPath { get; set; }
 
         /// <summary>
         /// 要识别的动作模型列表
         /// </summary>
-        public List<ActionModel> ModelList { get; set; }
+        public ActionModel Model { get; set; }
+
+        /// <summary>
+        /// 动作模型文件路径列表
+        /// </summary>
+        public List<string> ModeFilePathList { get; set; }
 
         #region 单例
 
@@ -51,29 +55,29 @@ namespace FitnessCoach.Core
 
         private ActionRecognition()
         {
-            ModelList = new List<ActionModel>();
-            this.LoadModel(DirPath);
+            ModeFilePathList = new List<string>();
+            DirPath = GlobalConfig.ActionModelDirPath;
         }
 
         /// <summary>
-        /// 加载指定文件夹里的模型
+        /// 加载指定文件夹里的模型文件路径
         /// </summary>
         /// <param name="dirPath">模型文件的路径</param>
-        public void LoadModel(string dirPath)
+        public void LoadModelDir(string dirPath)
         {
             if (!Directory.Exists(dirPath))
             {
-                LogUtil.Debug(this,$"指定的模型文件夹:{dirPath} 不存在！");
+                LogUtil.Debug(this, $"指定的模型文件夹:{dirPath} 不存在！");
                 return;
             }
 
+            DirPath = dirPath;
             string[] filePathArr = Directory.GetFiles(dirPath);
             foreach (string filePath in filePathArr)
             {
-                string fileName = Path.GetFileNameWithoutExtension(filePath);
-                int index = fileName.LastIndexOf('_');
-                if (fileName.Substring(index + 1) == "Action")
-                    LoadModelFromFile(filePath);
+                string exten = Path.GetExtension(filePath);
+                if (exten == ".actionmodel" && !ModeFilePathList.Contains(filePath))
+                    ModeFilePathList.Add(filePath);
             }
         }
 
@@ -98,11 +102,11 @@ namespace FitnessCoach.Core
             try
             {
                 string xmlStr = File.ReadAllText(filePath);
-                LoadModelFromString(xmlStr);
+                Model = LoadModelFromString(xmlStr);
             }
             catch (Exception ex)
             {
-                LogUtil.Error(this,ex);
+                LogUtil.Error(this, ex);
             }
         }
 
@@ -110,22 +114,16 @@ namespace FitnessCoach.Core
         /// 加载模型XML
         /// </summary>
         /// <param name="modelXmlStr"></param>
-        public void LoadModelFromString(string modelXmlStr)
+        public ActionModel LoadModelFromString(string modelXmlStr)
         {
             if (string.IsNullOrEmpty(modelXmlStr))
             {
                 LogUtil.Debug(this, "指定的模型XML字符串不能为空！");
-                return;
+                return null;
             }
 
             ActionModel action = XmlUtil.Deserialize<ActionModel>(modelXmlStr);
-            if (this.ModelList.Exists(o => o.ActionName == action.ActionName))
-            {
-                int index = this.ModelList.FindIndex(o => o.ActionName == action.ActionName);
-                this.ModelList[index] = action;
-            }
-            else
-                this.ModelList.Add(action);
+            return action;
         }
 
         /// <summary>
@@ -138,13 +136,20 @@ namespace FitnessCoach.Core
             List<JointAngle> jointAngles = Skeleton.GetBodyJointAngleList(joints3);
 
             List<RecognitionResult> resultList = new List<RecognitionResult>();
-            foreach (ActionModel model in ModelList)
+            if (Model != null)
             {
-                model.Compared(jointAngles, keyBones, out RecognitionResult result);
+                Model.Compared(joints3, out RecognitionResult result);
                 resultList.Add(result);
             }
 
             return resultList;
+        }
+
+        public void Dispose()
+        {
+            Model?.Dispose();
+            ModeFilePathList?.Clear();
+            ModeFilePathList = null;
         }
     }
 }

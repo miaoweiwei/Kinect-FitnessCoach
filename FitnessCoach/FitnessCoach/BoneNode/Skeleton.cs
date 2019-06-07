@@ -160,7 +160,7 @@ namespace FitnessCoach.BoneNode
 
             return joints3;
         }
-
+        
         /// <summary>
         /// 画出多个人的骨骼框架
         /// </summary>
@@ -194,13 +194,14 @@ namespace FitnessCoach.BoneNode
             Pen boneDrawPen = new Pen(this.BodyBrushes[bodyIndex], thickness);
             //将关节点转换为2D深度（显示）空间
             Dictionary<JointType, Joint2D> joints2 = JointToJoint2Ds(bodyJoints);
-            // 指定 JointType.SpineMid 为坐标原点的三维空间坐标
-            Dictionary<JointType, Joint> joints3 = CoordinateTransformation3D(bodyJoints, JointType.SpineMid);
             
-            List<Joint2D> jointList = joints2.Values.ToList();
-            string str = XmlUtil.Serializer(jointList);
+            //List<Joint2D> jointList = joints2.Values.ToList();
+            //string str = XmlUtil.Serializer(jointList);
 
             this.DrawBody(joints2, dc, boneDrawPen);
+
+            // 指定 JointType.SpineMid 为坐标原点的三维空间坐标
+            Dictionary<JointType, Joint> joints3 = CoordinateTransformation3D(bodyJoints, JointType.SpineMid);
             this.DrawBoneAngle(joints3, joints2, dc, Brushes.White);
             ////TODO 显示手
             //Size s = new Size(Resources.hand.Width, Resources.hand.Height);

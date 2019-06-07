@@ -2,17 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using FitnessCoach.BoneNode;
 using FitnessCoach.Config;
 using FitnessCoach.Core;
@@ -34,15 +31,13 @@ namespace ActionRecording
 
         private ActionModel actionModel; //动作模型
 
-        //private List<JointType> recordingJointTypes; //记录用于对比的关节
-        //private List<Bone> recordingBones; //记录用于对比的骨骼
-
         private bool isRecording; //是否开始录制
         private ulong tracked;
 
         private Timer timer;
         private int triggerCount = 5;
         private string infomsg = "";
+        private DateTime starTime;
 
         #region UI有关的属性
 
@@ -135,8 +130,9 @@ namespace ActionRecording
             saveFileDialog = new SaveFileDialog
             {
                 Title = @"保存工件的配置",
-                Filter = @"模型文件（*.model）|*.model|XML文件（*.xml）|*.xml|文本文件（*.txt）|*.txt|所有文件（*.*）|*.*",
-                DefaultExt = @"模型文件（*.model）|*.model",
+                Filter =
+                    @"模型文件（*.actionmodel）|*.actionmodel|模型文件（*.model）|*.model|XML文件（*.xml）|*.xml|文本文件（*.txt）|*.txt|所有文件（*.*）|*.*",
+                DefaultExt = @"模型文件（*.actionmodel）|*.actionmodel",
                 InitialDirectory = Environment.CurrentDirectory,
                 RestoreDirectory = true,
                 OverwritePrompt = true,
@@ -145,8 +141,9 @@ namespace ActionRecording
             openFileDialog = new OpenFileDialog
             {
                 Title = @"加载工件的配置",
-                Filter = @"模型文件（*.model）|*.model|XML文件（*.xml）|*.xml|文本文件（*.txt）|*.txt|所有文件（*.*）|*.*",
-                DefaultExt = @"模型文件（*.model）|*.model",
+                Filter =
+                    @"模型文件（*.actionmodel）|*.actionmodel|模型文件（*.model）|*.model|XML文件（*.xml）|*.xml|文本文件（*.txt）|*.txt|所有文件（*.*）|*.*",
+                DefaultExt = @"模型文件（*.actionmodel）|*.actionmodel",
                 CheckFileExists = true,
                 Multiselect = false,
                 InitialDirectory = Environment.CurrentDirectory,
@@ -201,7 +198,8 @@ namespace ActionRecording
             using (DrawingContext dc = drawingGroup.Open())
             {
                 Rect r = new Rect(0.0, 0.0, displayWidth, displayHeight);
-                dc.DrawRectangle(_bodyBackGroundColor, null, r);
+                //dc.DrawRectangle(_bodyBackGroundColor, null, r);
+                dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)), null, r);
                 Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
                 for (int i = 0; i < bodies.Length; i++)
                 {
@@ -219,6 +217,9 @@ namespace ActionRecording
                             Index = actionModel.ActionFrames.Count,
                             Joints = body.Joints.Values.ToList()
                         });
+                        TimeSpan endTime = DateTime.Now - starTime;
+                        SetFrameCountText(actionModel.ActionFrames.Count.ToString());
+                        SetDurationText(endTime.ToString("g"));
                     }
 
                     Dictionary<JointType, Joint2D> joint2Ds = skeleton.JointToJoint2Ds(body.Joints);
@@ -275,6 +276,7 @@ namespace ActionRecording
 
                 if (!string.IsNullOrEmpty(infomsg))
                     SetPromptInfo(dc, infomsg);
+
                 drawingGroup.ClipGeometry = new RectangleGeometry(r);
             }
         }
@@ -296,6 +298,8 @@ namespace ActionRecording
         private void MainWindow_OnClosing(object sender, CancelEventArgs e)
         {
             KinectEventCancelBind();
+            bodyFrameReader?.Dispose();
+            bodyFrameReader = null;
             if (kinectSensor == null) return;
             kinectSensor.Close();
             kinectSensor = null;
@@ -398,7 +402,7 @@ namespace ActionRecording
                 return null;
             }
         }
-        
+
         #endregion
 
         #region 新建模型
@@ -616,15 +620,14 @@ namespace ActionRecording
             try
             {
                 triggerCount--;
+                infomsg = triggerCount < 0 ? "" : $"请做好动作的开始姿态，{triggerCount}秒钟够开始录制！";
                 if (triggerCount < 0)
                 {
                     isRecording = true;
+                    starTime = DateTime.Now;
                     Dispatcher.BeginInvoke(new Action(() => { BtnRecording.IsEnabled = true; }));
-                    infomsg = "";
                     return;
                 }
-
-                infomsg = $"请做好动作的开始姿态，{triggerCount}秒钟够开始录制！";
             }
             catch (Exception ex)
             {

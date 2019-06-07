@@ -47,7 +47,7 @@
         </ToolBar>
 
         <Grid Grid.Row="2">
-            <Border Name="StartPageBorder" Background="{StaticResource StartPageColor}" Visibility="Visible">
+            <Border Name="StartPageBorder" Background="{StaticResource StartPageColor}">
                 <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -172,18 +172,17 @@
                 </Grid>
             </Border>
             <Border Name="SaveResultPage" Background="{StaticResource StartPageColor}" Visibility="Collapsed">
-                <Grid  HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <Label  Grid.Row="0"
-                            HorizontalContentAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontSize="40"
-                            Foreground="White"
-                            Content="保存成功">
-                    </Label>
+                    <Label Grid.Row="0"
+                           HorizontalContentAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="40"
+                           Foreground="White"
+                           Content="保存成功" />
                     <Grid Grid.Row="1" HorizontalAlignment="Center">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />

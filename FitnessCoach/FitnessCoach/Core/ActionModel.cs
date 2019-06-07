@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using FitnessCoach.BoneNode;
 using Microsoft.Kinect;
 
@@ -44,12 +46,32 @@ namespace FitnessCoach.Core
         /// </summary>
         public List<Bone> KeyBones { get; set; }
 
-        public bool Compared(List<JointAngle> jointAngleList, List<KeyBone> keyBoneList, out RecognitionResult result)
+        /// <summary> 当前应该对比第几帧 </summary>
+        [XmlIgnore]
+        public int Index { get; private set; } = 0;
+
+        public bool Compared(IReadOnlyDictionary<JointType, Joint> joints3, out RecognitionResult result)
         {
-            result = new RecognitionResult();
+            return Compared(joints3, AllowableAngularError, AllowableKeyBoneError, out result);
+        }
+
+        public bool Compared(IReadOnlyDictionary<JointType, Joint> joints3, float angularError, float keyBoneError,
+            out RecognitionResult result)
+        {
+            result = new RecognitionResult() {AttitudeName = this.ActionName, InfoMessages = new List<string>()};
+            if (Index == 0)
+            {
+                //Dictionary<JointType, Joint> joints3 = ActionFrames[Index].Joints.ToDictionary(o => o.JointType, value => value);
+                //joints3 = Skeleton.CoordinateTransformation3D(joints3, JointType.SpineMid);
+                List<KeyBone> keyBones = Skeleton.GetBodyAllKeyBones(joints3);
+                List<JointAngle> jointAngles = Skeleton.GetBodyJointAngleList(joints3);
+
+                return ActionFrames[Index].Compared(joints3, JointAngles, KeyBones, angularError, keyBoneError, out result.InfoMessages);
+            }
 
             return true;
         }
+
 
         public void Dispose()
         {

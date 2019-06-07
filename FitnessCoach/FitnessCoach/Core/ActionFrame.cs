@@ -15,55 +15,49 @@ namespace FitnessCoach.Core
         /// 动作帧的序号
         /// </summary>
         public int Index;
+
         /// <summary>
         /// 骨骼节点序列
         /// </summary>
         public List<Joint> Joints;
+
         /// <summary>
         /// 是否已经正确对比
         /// </summary>
         [XmlIgnore] //不序列化
         public bool IsCompared;
 
-        public bool Compared(ActionFrame action, float angularError, float keyBoneError,
-            List<JointAngle> jointAngleList, List<KeyBone> keyBoneList, out List<string> result)
+        public bool Compared(IReadOnlyDictionary<JointType, Joint> joints3, List<JointType> jointAngleList,
+            List<Bone> keyBoneList, float angularError, float keyBoneError, out List<string> result)
         {
-            IsCompared = Compared(action, angularError, keyBoneError, jointAngleList, out result);
-            if (keyBoneList == null)
-                return IsCompared;
-
-            Dictionary<JointType, Joint> joints3 = GetJointDictionary(action.Joints);
-            List<KeyBone> keyBones = Skeleton.GetBodyAllKeyBones(joints3);
-
-            if (IsCompared) //对比关键骨骼
-            {
-                foreach (JointAngle jointAngle in jointAngleList)
-                {
-                }
-            }
-
+            IsCompared = Compared(joints3,jointAngleList, angularError, keyBoneError, out result);
             return IsCompared;
         }
 
-        public bool Compared(ActionFrame action, float angularError, float keyBoneError,
-            List<JointAngle> jointAngleList, out List<string> result)
+        public bool Compared(IReadOnlyDictionary<JointType, Joint> joints3,List<JointType> jointAngleList, float angularError, float keyBoneError,
+            out List<string> result)
         {
             result = new List<string>();
-            Dictionary<JointType, Joint> joints3 = GetJointDictionary(action.Joints);
-            //关节的角度
-            List<JointAngle> jointAngles = Skeleton.GetBodyJointAngleList(joints3);
-            
-            bool IsCompared = true;
-            return IsCompared;
-        }
 
-        private Dictionary<JointType, Joint> GetJointDictionary(List<Joint> joints)
-        {
-            Dictionary<JointType, Joint> newJoints = new Dictionary<JointType, Joint>();
-            foreach (Joint joint in joints)
-                newJoints.Add(joint.JointType, joint);
-            newJoints = Skeleton.CoordinateTransformation3D(newJoints, JointType.SpineMid);
-            return newJoints;
+            //模型当前帧的有关信息
+            Dictionary<JointType, Joint> modelJoints = Joints.ToDictionary(o => o.JointType, value => value);
+            modelJoints = Skeleton.CoordinateTransformation3D(modelJoints, JointType.SpineMid);
+            List<KeyBone> modelKeyBones = Skeleton.GetBodyAllKeyBones(modelJoints);
+            List<JointAngle> modelJointAngles = Skeleton.GetBodyJointAngleList(modelJoints);
+
+            //待检测的
+            joints3 = Skeleton.CoordinateTransformation3D(joints3, JointType.SpineMid);
+            List<KeyBone> keyBones = Skeleton.GetBodyAllKeyBones(joints3);
+            List<JointAngle> jointAngles = Skeleton.GetBodyJointAngleList(joints3);
+
+
+            foreach (JointType jointType in jointAngleList)
+            {
+                
+            }
+
+            
+            return IsCompared;
         }
 
         public void Dispose()
