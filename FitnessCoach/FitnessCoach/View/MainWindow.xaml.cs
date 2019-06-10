@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Speech.Synthesis;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,6 +17,7 @@ using FitnessCoach.Core;
 using FitnessCoach.Util;
 using Microsoft.Kinect;
 using Microsoft.Win32;
+using Timer = System.Windows.Forms.Timer;
 
 namespace FitnessCoach.View
 {
@@ -28,6 +30,8 @@ namespace FitnessCoach.View
 
         private bool _isRecognition;
         private AttitudeRecognition attitudeRecognition;
+
+        private Timer timer;
 
         #endregion
 
@@ -159,6 +163,7 @@ namespace FitnessCoach.View
         {
             this.drawingGroup = new DrawingGroup();
             this._bodyBodyImageSource = new DrawingImage(drawingGroup);
+            SelectModelDir(GlobalConfig.ActionModelDirPath);
         }
 
         private void InitKinect()
@@ -323,10 +328,14 @@ namespace FitnessCoach.View
                 folder.ShowNewFolderButton = false;
                 folder.SelectedPath = AppDomain.CurrentDomain.BaseDirectory;
                 if (folder.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                    GlobalConfig.ActionModelDirPath = folder.SelectedPath;
+                    SelectModelDir(folder.SelectedPath);
             }
+        }
 
-            ModelDirPathTbx.Text = GlobalConfig.ModelDirPath;
+        private void SelectModelDir(string modelDir)
+        {
+            GlobalConfig.ActionModelDirPath = modelDir;
+            ModelDirPathTbx.Text = GlobalConfig.ActionModelDirPath;
             ActionRecognition action = ActionRecognition.GetActionRecognition();
             action.ModeFilePathList.Clear();
             action.LoadModelDir(GlobalConfig.ModelDirPath);
@@ -357,8 +366,37 @@ namespace FitnessCoach.View
             BtnStartRecording.Content = _isRecognition ? "停止姿态识别" : "姿态识别";
             StatusText = _isRecognition ? "正在识别中..." : "未进行识别";
             if (attitudeRecognition == null)
-            {
                 attitudeRecognition = AttitudeRecognition.GetAttitudeRecognition();
+            if (timer == null)
+            {
+                timer = new Timer {Interval = 1000};
+                timer.Tick += Timer_Tick;
+            }
+
+            if (_isRecognition)
+                timer.Start();
+            else
+                timer.Stop();
+        }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            timer.Enabled = false;
+            try
+            {
+                SpeechHelp speech = SpeechHelp.GetInstance();
+                if (speech.Content == RecognitionResultText) return;
+                if (speech.SpeechState != SynthesizerState.Speaking)
+                    speech.Speak(RecognitionResultText);
+
+            }
+            catch (Exception ex)
+            {
+                LogUtil.Error(this, ex);
+            }
+            finally
+            {
+                timer.Enabled = true;
             }
         }
 
@@ -385,7 +423,9 @@ namespace FitnessCoach.View
 
                     ActionRecognition action = ActionRecognition.GetActionRecognition();
 
-                    action.Identification(body.Joints);
+                    RecognitionResult result = action.Identification(body.Joints);
+
+                    RecognitionResultText = string.Join(",", result.InfoMessages);
 
                     #endregion
                 }

@@ -130,6 +130,8 @@ namespace FitnessCoach.BoneNode
                     joints3[bondVectorTuple2.Item1].Position);
 
                 float angle = VectorHelp.GetVectorAngle(vector1, vector2);
+                //angle = (float) Math.Round(angle, 2);
+                
                 jointAngles.Add(new JointAngle(pair.Key, angle));
             }
 
@@ -160,7 +162,7 @@ namespace FitnessCoach.BoneNode
 
             return joints3;
         }
-        
+
         /// <summary>
         /// 画出多个人的骨骼框架
         /// </summary>
@@ -194,7 +196,7 @@ namespace FitnessCoach.BoneNode
             Pen boneDrawPen = new Pen(this.BodyBrushes[bodyIndex], thickness);
             //将关节点转换为2D深度（显示）空间
             Dictionary<JointType, Joint2D> joints2 = JointToJoint2Ds(bodyJoints);
-            
+
             //List<Joint2D> jointList = joints2.Values.ToList();
             //string str = XmlUtil.Serializer(jointList);
 
@@ -202,7 +204,16 @@ namespace FitnessCoach.BoneNode
 
             // 指定 JointType.SpineMid 为坐标原点的三维空间坐标
             Dictionary<JointType, Joint> joints3 = CoordinateTransformation3D(bodyJoints, JointType.SpineMid);
-            this.DrawBoneAngle(joints3, joints2, dc, Brushes.White);
+            ControlCommand command = ControlCommand.GetControlCommand();
+            command.SwitchLeader(body);
+            command.HandClosedEvent(body);
+            if (command.LeaderId == body.TrackingId)
+            {
+                dc.DrawEllipse(Brushes.White, new Pen(Brushes.Yellow, 2), joints2[JointType.Head].Position, 10,
+                    10);
+                this.DrawBoneAngle(joints3, joints2, dc, Brushes.White);
+            }
+
             ////TODO 显示手
             //Size s = new Size(Resources.hand.Width, Resources.hand.Height);
             //Point p = new Point(joints2[JointType.WristRight].Position.X - s.Width / 2,

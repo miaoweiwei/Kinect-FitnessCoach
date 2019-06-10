@@ -48,7 +48,7 @@
 
         <Grid Grid.Row="2">
             <Border Name="StartPageBorder" Background="{StaticResource StartPageColor}">
-                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -96,7 +96,7 @@
                 <Image Name="BodyImage" Source="{Binding BodyImageSource}" Stretch="UniformToFill" />
             </Viewbox>
 
-            <Border Name="SavePage" Background="{StaticResource StartPageColor}" Visibility="Collapsed">
+            <Border Name="SavePage" Background="{StaticResource StartPageColor}" Visibility="Visible">
                 <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -111,7 +111,7 @@
                            Content="设置动作模型的有关参数" />
                     <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -120,30 +120,38 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Label Grid.Row="1" Grid.Column="0" Content="动作的名字：" FontSize="20" Foreground="White" />
-                        <TextBox Name="ActionNameTbx" Grid.Row="1" Grid.Column="1"
+                        <Label Grid.Row="0" Grid.Column="0" Content="动作的名字：" FontSize="20" Foreground="White" />
+                        <TextBox Name="ActionNameTbx" Grid.Row="0" Grid.Column="1"
                                  VerticalContentAlignment="Center"
                                  TextWrapping="NoWrap"
                                  Background="{StaticResource StartPageColor}"
                                  FontSize="20" Foreground="White"
                                  Width="150"
                                  Text="模型一" />
-                        <Label Grid.Row="2" Grid.Column="0" Content="关键关节角度误差：" FontSize="20" Foreground="White" />
-                        <TextBox Name="AngularErrorTbx" Grid.Row="2" Grid.Column="1"
+                        <Label Grid.Row="1" Grid.Column="0" Content="关键关节角度误差：" FontSize="20" Foreground="White" />
+                        <TextBox Name="AngularErrorTbx" Grid.Row="1" Grid.Column="1"
                                  VerticalContentAlignment="Center"
                                  TextWrapping="NoWrap"
                                  Background="{StaticResource StartPageColor}"
                                  FontSize="20" Foreground="White"
                                  Width="150"
                                  Text="20" />
-                        <Label Grid.Row="3" Grid.Column="0" Content="关键骨骼角度误差：" FontSize="20" Foreground="White" />
-                        <TextBox Name="KeyBoneErrorTbx" Grid.Row="3" Grid.Column="1"
+                        <Label Grid.Row="2" Grid.Column="0" Content="关键骨骼角度误差：" FontSize="20" Foreground="White" />
+                        <TextBox Name="KeyBoneErrorTbx" Grid.Row="2" Grid.Column="1"
                                  VerticalContentAlignment="Center"
                                  TextWrapping="NoWrap"
                                  Background="{StaticResource StartPageColor}"
                                  FontSize="20" Foreground="White"
                                  Width="150"
                                  Text="20" />
+                        <Label Grid.Row="3" Grid.Column="0" Content="最后帧持续时间：" FontSize="20" Foreground="White" />
+                        <TextBox Name="LastFrameDurationTimeTbx" Grid.Row="3" Grid.Column="1"
+                                 VerticalContentAlignment="Center"
+                                 TextWrapping="NoWrap"
+                                 Background="{StaticResource StartPageColor}"
+                                 FontSize="20" Foreground="White"
+                                 Width="150"
+                                 Text="5" />
                     </Grid>
                     <Grid Grid.Row="2" HorizontalAlignment="Center">
                         <Grid.ColumnDefinitions>

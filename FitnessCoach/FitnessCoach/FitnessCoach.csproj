@@ -76,6 +76,7 @@
     <Compile Include="BoneNode\Bone.cs" />
     <Compile Include="Config\GlobalConfig.cs" />
     <Compile Include="Core\RecognitionResult.cs" />
+    <Compile Include="Util\ControlCommand.cs" />
     <Compile Include="Util\LogUtil.cs" />
     <Compile Include="Util\SystemSleepManagement.cs" />
     <Compile Include="Util\Tools.cs" />

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using FitnessCoach.BoneNode;
 using FitnessCoach.Config;
 using FitnessCoach.Util;
@@ -75,8 +76,8 @@ namespace FitnessCoach.Core
             string[] filePathArr = Directory.GetFiles(dirPath);
             foreach (string filePath in filePathArr)
             {
-                string exten = Path.GetExtension(filePath);
-                if (exten == ".actionmodel" && !ModeFilePathList.Contains(filePath))
+                string extension = Path.GetExtension(filePath);
+                if (extension == ".actionmodel" && !ModeFilePathList.Contains(filePath))
                     ModeFilePathList.Add(filePath);
             }
         }
@@ -130,19 +131,14 @@ namespace FitnessCoach.Core
         /// 姿态识别
         /// </summary>
         /// <returns>返回识别的结果 <see cref=" List&lt;RecognitionResult&gt; "/></returns>
-        public List<RecognitionResult> Identification(IReadOnlyDictionary<JointType, Joint> joints3)
+        public RecognitionResult Identification(IReadOnlyDictionary<JointType, Joint> joints3)
         {
-            List<KeyBone> keyBones = Skeleton.GetBodyAllKeyBones(joints3);
-            List<JointAngle> jointAngles = Skeleton.GetBodyJointAngleList(joints3);
-
-            List<RecognitionResult> resultList = new List<RecognitionResult>();
-            if (Model != null)
+            RecognitionResult result = new RecognitionResult() {InfoMessages = new List<string>() {"没有动作模型"}};
+            if (Model != null && !Model.IsCompared)
             {
-                Model.Compared(joints3, out RecognitionResult result);
-                resultList.Add(result);
+                Model.Compared(joints3, out result);
             }
-
-            return resultList;
+            return result;
         }
 
         public void Dispose()

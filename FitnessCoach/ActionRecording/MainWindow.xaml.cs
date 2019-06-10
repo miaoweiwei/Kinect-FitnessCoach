@@ -32,7 +32,6 @@ namespace ActionRecording
         private ActionModel actionModel; //动作模型
 
         private bool isRecording; //是否开始录制
-        private ulong tracked;
 
         private Timer timer;
         private int triggerCount = 5;
@@ -201,20 +200,19 @@ namespace ActionRecording
                 //dc.DrawRectangle(_bodyBackGroundColor, null, r);
                 dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)), null, r);
                 Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
-                for (int i = 0; i < bodies.Length; i++)
+
+                ControlCommand command = ControlCommand.GetControlCommand();
+
+                foreach (var body in bodies)
                 {
-                    Body body = bodies[i];
-
-                    if (tracked == 0)
-                        tracked = body.IsTracked ? body.TrackingId : 0;
-
-                    if (body.IsTracked && body.TrackingId == tracked && actionModel != null && isRecording)
+                    command.SwitchLeader(body);
+                    if (body.IsTracked && body.TrackingId == command.LeaderId &&
+                        actionModel != null && isRecording)
                     {
                         if (actionModel.ActionFrames == null)
                             actionModel.ActionFrames = new List<ActionFrame>();
                         actionModel.ActionFrames.Add(new ActionFrame()
                         {
-                            Index = actionModel.ActionFrames.Count,
                             Joints = body.Joints.Values.ToList()
                         });
                         TimeSpan endTime = DateTime.Now - starTime;
@@ -240,11 +238,19 @@ namespace ActionRecording
                     //画关节点的圆
                     foreach (KeyValuePair<JointType, Joint2D> pair in joint2Ds)
                     {
-                        if (actionModel.JointAngles != null &&
-                            actionModel.JointAngles.Contains(pair.Value.Joint2DType)) //选中的关节
-                            dc.DrawEllipse(_joinSelectPen.Brush, _joinSelectPen, pair.Value.Position, 6, 6);
-                        else //没有选中的关节
-                            dc.DrawEllipse(_joinDefaultPen.Brush, _joinDefaultPen, pair.Value.Position, 5, 5);
+                        if (pair.Key == JointType.Head)
+                        {
+                            if (body.TrackingId == command.LeaderId)
+                                dc.DrawEllipse(Brushes.White, null, pair.Value.Position, 15, 10);
+                        }
+                        else
+                        {
+                            if (actionModel.JointAngles != null &&
+                                actionModel.JointAngles.Contains(pair.Value.Joint2DType)) //选中的关节
+                                dc.DrawEllipse(_joinSelectPen.Brush, _joinSelectPen, pair.Value.Position, 6, 6);
+                            else //没有选中的关节
+                                dc.DrawEllipse(_joinDefaultPen.Brush, _joinDefaultPen, pair.Value.Position, 5, 5);
+                        }
                     }
                 }
 
@@ -406,6 +412,15 @@ namespace ActionRecording
         #endregion
 
         #region 新建模型
+
+        private void LabNewModel_OnClick(object sender, RoutedEventArgs e)
+        {
+            SwitchShowGrid(TemplateViewBox, ModelToolBar);
+            if (actionModel == null)
+                actionModel = new ActionModel() {ActionFrames = new List<ActionFrame>()};
+            OpenTemplate();
+            SetStateText("请选择关键的关节节点和骨骼");
+        }
 
         /// <summary> 加载模型 </summary>
         private void OpenTemplate()
@@ -574,15 +589,6 @@ namespace ActionRecording
 
         #endregion
 
-        private void LabNewModel_OnClick(object sender, RoutedEventArgs e)
-        {
-            SwitchShowGrid(TemplateViewBox, ModelToolBar);
-            if (actionModel == null)
-                actionModel = new ActionModel();
-            OpenTemplate();
-            SetStateText("请选择关键的关节节点和骨骼");
-        }
-
         /// <summary> 加载模板 </summary>
         private List<Joint2D> LoadTemplateModel(string modelPath)
         {
@@ -696,7 +702,7 @@ namespace ActionRecording
                     actionModel.AllowableAngularError = angularError;
                 else
                 {
-                    MessageBox.Show("关键关节角度误差填写错误！，请重新填写！", "提示");
+                    MessageBox.Show("关键关节角度误差填写错误！请重新填写！", "提示");
                     return;
                 }
 
@@ -704,7 +710,15 @@ namespace ActionRecording
                     actionModel.AllowableKeyBoneError = keyBoneError;
                 else
                 {
-                    MessageBox.Show("关键骨骼角度误差！，请重新填写！", "提示");
+                    MessageBox.Show("关键骨骼角度误差！请重新填写！", "提示");
+                    return;
+                }
+
+                if (int.TryParse(LastFrameDurationTimeTbx.Text.Trim(), out var lastFrameDurationTime))
+                    actionModel.LastFrameDurationTime = lastFrameDurationTime;
+                else
+                {
+                    MessageBox.Show("最后帧持续时间填写错误！请重新填写！", "提示");
                     return;
                 }
 

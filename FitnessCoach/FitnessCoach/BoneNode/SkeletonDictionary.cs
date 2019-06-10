@@ -93,6 +93,7 @@ namespace FitnessCoach.BoneNode
                 //躯干
                 {JointType.Neck, new Tuple<Bone, Bone>(Bone.Neck, Bone.NeckShoulder)},
                 {JointType.SpineMid, new Tuple<Bone, Bone>(Bone.SpineUp, Bone.SpineDown)},
+                {JointType.SpineShoulder, new Tuple<Bone, Bone>(Bone.NeckShoulder, Bone.SpineUp)},
             });
         }
 
