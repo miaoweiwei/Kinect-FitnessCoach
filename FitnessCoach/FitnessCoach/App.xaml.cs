@@ -16,7 +16,6 @@ namespace FitnessCoach
     /// </summary>
     public partial class App : Application
     {
-
         protected override void OnStartup(StartupEventArgs e)
         {
             GlobalConfig.Init();
@@ -26,19 +25,22 @@ namespace FitnessCoach
             base.OnStartup(e);
         }
 
-        private void Current_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        private void Current_DispatcherUnhandledException(object sender,
+            System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
-            LogUtil.Error(this,e.Exception);
+            LogUtil.Error(this, e.Exception);
         }
 
         private void Current_Deactivated(object sender, EventArgs e)
         {
             SystemSleepManagement.RestoreSleep();
+            Debug.WriteLine("恢复系统休眠策略");
         }
 
         private void Current_Activated(object sender, EventArgs e)
         {
             SystemSleepManagement.PreventSleep();
+            Debug.WriteLine("阻止系统休眠");
         }
 
         protected override void OnExit(ExitEventArgs e)

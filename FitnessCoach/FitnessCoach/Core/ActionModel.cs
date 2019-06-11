@@ -81,22 +81,21 @@ namespace FitnessCoach.Core
         public bool Compared(IReadOnlyDictionary<JointType, Joint> joints3, float angularError, float keyBoneError,
             out RecognitionResult result)
         {
-            result = new RecognitionResult() {AttitudeName = this.ActionName, InfoMessages = new List<string>()};
+            result = new RecognitionResult() {AttitudeName = this.ActionName, InfoMessages = ""};
             if (0 < Index && Index < ActionFrames.Count - 1)
             {
                 bool temp = ActionFrames[Index].Compared(joints3, JointAngles, KeyBones, angularError, keyBoneError,
                     out result.InfoMessages);
                 if (Index % 20 == 0)
                 {
-                    result.InfoMessages.Clear();
-                    result.InfoMessages.Add($"动作已完成{(Index * 0.1 / ActionFrames.Count * 100).ToString("####")}%,加油！");
+                    result.InfoMessages = $"动作已完成{(Index * 0.1 / ActionFrames.Count * 100).ToString("####")}%,加油！";
                 }
 
                 Index++;
                 return temp;
             }
 
-            if (Index == 0 && !ActionFrames[Index].IsCompared)
+            if (Index == 0 && !ActionFrames[Index].IsCompared) //第一帧
             {
                 bool temp = ActionFrames[Index].Compared(joints3, JointAngles, KeyBones, angularError, keyBoneError,
                     out result.InfoMessages);
@@ -106,12 +105,11 @@ namespace FitnessCoach.Core
                     return true;
                 }
 
-                result.InfoMessages.Clear();
-                result.InfoMessages.Add("请做好准备动作");
+                result.InfoMessages = "请做好准备动作";
                 return false;
             }
 
-            if (Index == ActionFrames.Count - 1)
+            if (Index == ActionFrames.Count - 1) //最后一帧
             {
                 if (!ActionFrames[Index].IsCompared)
                 {
@@ -119,6 +117,7 @@ namespace FitnessCoach.Core
                         out result.InfoMessages);
                     if (temp)
                     {
+                        result.InfoMessages = $"请保持{LastFrameDurationTime}秒，坚持住！";
                         starTime = DateTime.Now;
                     }
 
@@ -130,16 +129,15 @@ namespace FitnessCoach.Core
                         out result.InfoMessages);
                     if (temp)
                     {
-                        if ((DateTime.Now - starTime).Milliseconds >= 5000)
+                        double span = LastFrameDurationTime - (DateTime.Now - starTime).TotalSeconds;
+                        if (span <= 0)
                         {
-                            result.InfoMessages.Clear();
-                            result.InfoMessages.Add("动作已经对比完成");
+                            result.InfoMessages = "动作已经对比完成";
                             IsCompared = true;
                             return true;
                         }
 
-                        result.InfoMessages.Clear();
-                        result.InfoMessages.Add("请保持5秒，坚持住！");
+                        result.InfoMessages = $"请再坚持{span.ToString("0")}秒！";
                         return false;
                     }
                     else
@@ -149,8 +147,6 @@ namespace FitnessCoach.Core
                     }
                 }
             }
-
-
             return true;
         }
 

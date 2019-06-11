@@ -171,6 +171,21 @@ namespace FitnessCoach.Util
 
             Debug.WriteLine($"授权变更的人：{body.TrackingId}；变更结果：{isLeader}");
         }
+
+        protected virtual void OnLeftHandOpenEvent(Body body)
+        {
+            LeftHandOpenEvent?.Invoke(body);
+        }
+
+        protected virtual void OnRightHandOpenEvent(Body body)
+        {
+            RightHandOpenEvent?.Invoke(body);
+        }
+
+        protected virtual void OnHandOpenEvent(Body body)
+        {
+            HandOpenEvent?.Invoke(body);
+        }
     }
 
     internal enum Hand

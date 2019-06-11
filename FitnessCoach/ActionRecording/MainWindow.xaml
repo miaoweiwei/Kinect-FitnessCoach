@@ -48,7 +48,7 @@
 
         <Grid Grid.Row="2">
             <Border Name="StartPageBorder" Background="{StaticResource StartPageColor}">
-                <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -87,16 +87,23 @@
 
                 </Grid>
             </Border>
-            <Viewbox Name="TemplateViewBox" Visibility="Collapsed">
-                <Image Name="BodyTemplateImage" Source="{Binding TemplateImageSource}" Stretch="UniformToFill"
-                       PreviewMouseLeftButtonDown="BodyTemplateImage_OnPreviewMouseLeftButtonDown" />
-            </Viewbox>
+            
+            <Border>
+                <Grid>
+                    <Viewbox Name="TemplateViewBox" Visibility="Collapsed">
+                        <Image Name="BodyTemplateImage" Source="{Binding TemplateImageSource}" Stretch="UniformToFill"
+                               PreviewMouseLeftButtonDown="BodyTemplateImage_OnPreviewMouseLeftButtonDown" />
+                    </Viewbox>
 
-            <Viewbox Name="BodyViewBox" Visibility="Collapsed"> <!--骨骼图-->
-                <Image Name="BodyImage" Source="{Binding BodyImageSource}" Stretch="UniformToFill" />
-            </Viewbox>
+                    <Viewbox Name="BodyViewBox" Visibility="Collapsed">
+                        <!--骨骼图-->
+                        <Image Name="BodyImage" Source="{Binding BodyImageSource}" Stretch="UniformToFill" />
+                    </Viewbox>
+                </Grid>
+            </Border>
 
-            <Border Name="SavePage" Background="{StaticResource StartPageColor}" Visibility="Visible">
+
+            <Border Name="SavePage" Background="{StaticResource StartPageColor}" Visibility="Collapsed">
                 <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />

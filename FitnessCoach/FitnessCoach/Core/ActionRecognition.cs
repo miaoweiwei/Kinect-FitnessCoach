@@ -133,11 +133,19 @@ namespace FitnessCoach.Core
         /// <returns>返回识别的结果 <see cref=" List&lt;RecognitionResult&gt; "/></returns>
         public RecognitionResult Identification(IReadOnlyDictionary<JointType, Joint> joints3)
         {
-            RecognitionResult result = new RecognitionResult() {InfoMessages = new List<string>() {"没有动作模型"}};
-            if (Model != null && !Model.IsCompared)
+            RecognitionResult result = new RecognitionResult() {InfoMessages = ""};
+            if (Model != null)
             {
-                Model.Compared(joints3, out result);
+                if (!Model.IsCompared)
+                    Model.Compared(joints3, out result);
+                else
+                    result.InfoMessages = Model.ActionName + "已完成";
             }
+            else
+            {
+                result.InfoMessages = "没有动作模型";
+            }
+
             return result;
         }
 

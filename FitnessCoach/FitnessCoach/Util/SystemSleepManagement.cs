@@ -8,11 +8,11 @@ using System.Windows;
 
 namespace FitnessCoach.Util
 {
-    class SystemSleepManagement
+    public static class SystemSleepManagement
     {
         //定义API函数
         [DllImport("kernel32.dll")]
-        static extern uint SetThreadExecutionState(ExecutionFlag flags);
+        private static extern uint SetThreadExecutionState(ExecutionFlag flags);
 
         [Flags]
         enum ExecutionFlag : uint
@@ -25,8 +25,8 @@ namespace FitnessCoach.Util
         /// <summary>
         ///阻止系统休眠，直到线程结束恢复休眠策略
         /// </summary>
-        /// <param name="includeDisplay">阻止系统休眠时是否阻止关闭显示器，默认false不关闭</param>
-        public static void PreventSleep(bool includeDisplay = false)
+        /// <param name="includeDisplay">是否阻止关闭显示器，默认阻止显示器关闭</param>
+        public static void PreventSleep(bool includeDisplay = true)
         {
             if (includeDisplay)
                 SetThreadExecutionState(ExecutionFlag.System | ExecutionFlag.Display | ExecutionFlag.Continue);

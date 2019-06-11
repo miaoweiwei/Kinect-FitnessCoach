@@ -112,11 +112,11 @@ namespace FitnessCoach.BoneNode
                 {JointType.Neck, "脖子"},
                 {JointType.Head, "头"},
                 {JointType.ShoulderLeft, "左肩膀"},
-                {JointType.ElbowLeft, "左手肘"},
+                {JointType.ElbowLeft, "左胳膊肘"},
                 {JointType.WristLeft, "左手腕"},
                 {JointType.HandLeft, "左手"},
                 {JointType.ShoulderRight, "右肩膀"},
-                {JointType.ElbowRight, "右手肘"},
+                {JointType.ElbowRight, "右胳膊肘"},
                 {JointType.WristRight, "右手腕"},
                 {JointType.HandRight, "右手"},
                 {JointType.HipLeft, "左髋关节"},
@@ -132,6 +132,70 @@ namespace FitnessCoach.BoneNode
                 {JointType.ThumbLeft, "左拇指"},
                 {JointType.HandTipRight, "右手指"},
                 {JointType.ThumbRight, "右拇指"},
+            });
+        }
+
+        private static IReadOnlyList<JointType> _defaultContrastAngleJoint;
+
+        /// <summary>
+        /// 获取默认对比角度的关节列表
+        /// </summary>
+        /// <returns></returns>
+        public static IReadOnlyList<JointType> GetDefaultContrastAngleJoint()
+        {
+            return _defaultContrastAngleJoint ?? (_defaultContrastAngleJoint = new List<JointType>()
+            {
+                //左臂的关节节点
+                JointType.ElbowLeft,
+                JointType.ShoulderLeft,
+
+                //左腿的关节节点
+                JointType.KneeLeft,
+                JointType.HipLeft,
+
+                //右臂的关节节点
+                JointType.ElbowRight,
+                JointType.ShoulderRight,
+                //右腿的关节节点
+                JointType.KneeRight,
+                JointType.HipRight,
+
+                //躯干
+                JointType.Neck,
+                JointType.SpineMid,
+                JointType.SpineShoulder,
+            });
+        }
+
+        private static IReadOnlyList<Bone> _defaultContrastBones;
+
+        public static IReadOnlyList<Bone> GetDefaultContrastBones()
+        {
+            return _defaultContrastBones ?? (_defaultContrastBones = new List<Bone>()
+            {
+                /*******************左边******************/
+
+                Bone.ArmLeft,
+                Bone.BigArmLeft,
+                Bone.ShoulderLeft,
+                Bone.LowerLegLeft,
+                Bone.ThighLeft,
+                Bone.HipLeft,
+
+                /*******************右边******************/
+
+                Bone.ArmRight,
+                Bone.BigArmRight,
+                Bone.ShoulderRight,
+                Bone.LowerLegRight,
+                Bone.ThighRight,
+                Bone.HipRight,
+                /*******************中间******************/
+
+                Bone.Neck,
+                Bone.NeckShoulder,
+                Bone.SpineUp,
+                Bone.SpineDown
             });
         }
     }

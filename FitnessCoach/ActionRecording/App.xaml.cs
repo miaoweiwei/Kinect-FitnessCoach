@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using FitnessCoach.Config;
+using FitnessCoach.Util;
 using log4net.Config;
 
 namespace ActionRecording
@@ -18,10 +20,29 @@ namespace ActionRecording
     {
         protected override void OnStartup(StartupEventArgs e)
         {
-            
+
             GlobalConfig.Init();
-            //LogInit();
+            Application.Current.Activated += Current_Activated;
+            Application.Current.Deactivated += Current_Deactivated;
+            Application.Current.DispatcherUnhandledException += Current_DispatcherUnhandledException;
             base.OnStartup(e);
+        }
+        private void Current_DispatcherUnhandledException(object sender,
+            System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            LogUtil.Error(this, e.Exception);
+        }
+
+        private void Current_Deactivated(object sender, EventArgs e)
+        {
+            SystemSleepManagement.RestoreSleep();
+            Debug.WriteLine("恢复系统休眠策略");
+        }
+
+        private void Current_Activated(object sender, EventArgs e)
+        {
+            SystemSleepManagement.PreventSleep();
+            Debug.WriteLine("阻止系统休眠");
         }
         private static void LogInit()
         {

@@ -10,7 +10,6 @@
         Closing="MainWindow_OnClosing">
     <Window.Resources>
         <SolidColorBrush x:Key="MediumGreyBrush" Color="#ff6e6e6e" />
-
         <SolidColorBrush x:Key="StartPageColor" Color="#ff444449" />
         <SolidColorBrush x:Key="LabBtnBackGroundColor" Color="#ff444449" />
         <SolidColorBrush x:Key="LabBtnForegroundColor" Color="#ff00BCF2" />
@@ -31,7 +30,7 @@
                 <MenuItem Header="起始页" Click="MenuItem_OnClick" />
             </Menu>
             <Grid Grid.Row="1">
-                <Grid Name="StartPage" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Grid Name="StartPage" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -82,13 +81,6 @@
                               BorderThickness="0"
                               MaxHeight="150"
                               PreviewMouseLeftButtonDown="ModelListBox_OnPreviewMouseLeftButtonDown" />
-                    <!--<ListBox Name="ModelListBox" Grid.Row="2"
-                         FontSize="20"
-                         Background="{StaticResource ListBoxBackGroundColor}"
-                         Foreground="{StaticResource ListBoxForegroundColor}"
-                         BorderThickness="0"
-                         MaxHeight="150"
-                         PreviewMouseLeftButtonDown="ModelListBox_OnPreviewMouseLeftButtonDown" />-->
                 </Grid>
                 <Grid Name="ModelPage" Margin="10 0 10 0" Visibility="Collapsed">
                     <Grid.RowDefinitions>

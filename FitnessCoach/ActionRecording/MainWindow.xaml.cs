@@ -206,8 +206,8 @@ namespace ActionRecording
                 foreach (var body in bodies)
                 {
                     command.SwitchLeader(body);
-                    if (body.IsTracked && body.TrackingId == command.LeaderId &&
-                        actionModel != null && isRecording)
+                    //if (body.IsTracked && body.TrackingId == command.LeaderId && actionModel != null && isRecording)
+                    if (body.IsTracked && actionModel != null && isRecording)
                     {
                         if (actionModel.ActionFrames == null)
                             actionModel.ActionFrames = new List<ActionFrame>();
@@ -253,32 +253,6 @@ namespace ActionRecording
                         }
                     }
                 }
-
-                #region //画出模板
-
-                //画出骨头
-                foreach (KeyValuePair<Bone, Tuple<JointType, JointType>> boneValuePair in boneDic)
-                {
-                    Tuple<JointType, JointType> bone = boneValuePair.Value;
-                    Joint2D joint0 = templateJoint2Ds.First(o => o.Joint2DType == bone.Item1);
-                    Joint2D joint1 = templateJoint2Ds.First(o => o.Joint2DType == bone.Item2);
-                    //连接两个节点
-                    if (actionModel.KeyBones != null && actionModel.KeyBones.Contains(boneValuePair.Key))
-                        dc.DrawLine(_boneSelectPen, joint0.Position, joint1.Position);
-                    else
-                        dc.DrawLine(_bonePen, joint0.Position, joint1.Position);
-                }
-
-                foreach (Joint2D joint2D in templateJoint2Ds)
-                {
-                    if (actionModel.JointAngles != null &&
-                        actionModel.JointAngles.Contains(joint2D.Joint2DType)) //选中的关节
-                        dc.DrawEllipse(_joinSelectPen.Brush, _joinSelectPen, joint2D.Position, 6, 6);
-                    else //没有选中的关节
-                        dc.DrawEllipse(_joinDefaultPen.Brush, _joinDefaultPen, joint2D.Position, 5, 5);
-                }
-
-                #endregion
 
                 if (!string.IsNullOrEmpty(infomsg))
                     SetPromptInfo(dc, infomsg);
@@ -423,13 +397,12 @@ namespace ActionRecording
         }
 
         /// <summary> 加载模型 </summary>
-        private void OpenTemplate()
+        private void OpenTemplate(bool isRecord = false)
         {
             using (DrawingContext dc = templateDrawingGroup.Open())
             {
-                Rect r = new Rect(0.0, 0.0, 400, 500);
+                Rect r = isRecord ? new Rect(0.0, 0.0, displayWidth, displayHeight) : new Rect(0.0, 0.0, 400, 500);
                 dc.DrawRectangle(_templateBackGroundColor, null, r);
-
                 //画出骨头
                 Dictionary<Bone, Tuple<JointType, JointType>> boneDic = SkeletonDictionary.GetBoneDic();
                 foreach (KeyValuePair<Bone, Tuple<JointType, JointType>> bonePair in boneDic)
@@ -614,9 +587,11 @@ namespace ActionRecording
         /// <summary> 关键的关节和骨骼选择完毕 </summary>
         private void BtnOk_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            SwitchShowGrid(BodyViewBox, ModelToolBar);
+            SwitchShowGrid(TemplateViewBox, BodyViewBox, ModelToolBar);
+            //SwitchShowGrid( BodyViewBox, ModelToolBar);
             KinectEventBind();
             kinectSensor.Open();
+            OpenTemplate(true); //画出模板
             BtnRecording.IsEnabled = true;
         }
 
@@ -672,9 +647,14 @@ namespace ActionRecording
         /// <summary>开始或结束录制 </summary>
         private void BtnRecording_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            //if (ControlCommand.GetControlCommand().LeaderId == 0uL)
+            //{
+            //    MessageBox.Show("请获取权限！");
+            //    return;
+            //}
+
             if (!isRecording)
             {
-                //actionModel = new ActionModel();
                 triggerCount = 5;
                 infomsg = $"请做好动作的开始姿态，{triggerCount}秒钟够开始录制！";
                 timer.Start();

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <ActionModel>
   <ActionName>右手上抬</ActionName>
   <ActionFrames>
@@ -70845,6 +70846,7 @@
   </ActionFrames>
   <AllowableAngularError>25</AllowableAngularError>
   <AllowableKeyBoneError>25</AllowableKeyBoneError>
+  <LastFrameDurationTime>5</LastFrameDurationTime>
   <JointAngles>
     <JointType>ShoulderRight</JointType>
     <JointType>ElbowRight</JointType>

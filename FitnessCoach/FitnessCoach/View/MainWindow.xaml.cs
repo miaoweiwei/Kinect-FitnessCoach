@@ -338,7 +338,7 @@ namespace FitnessCoach.View
             ModelDirPathTbx.Text = GlobalConfig.ActionModelDirPath;
             ActionRecognition action = ActionRecognition.GetActionRecognition();
             action.ModeFilePathList.Clear();
-            action.LoadModelDir(GlobalConfig.ModelDirPath);
+            action.LoadModelDir(GlobalConfig.ActionModelDirPath);
             ModelListView.Items.Clear();
             foreach (string path in action.ModeFilePathList)
             {
@@ -352,6 +352,7 @@ namespace FitnessCoach.View
         private void ModelListBox_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             ListViewItem item = e.Source as ListViewItem;
+            if (item == null) return;
             ActionRecognition action = ActionRecognition.GetActionRecognition();
             action.LoadModelFromFile(item.Tag.ToString());
 
@@ -388,7 +389,6 @@ namespace FitnessCoach.View
                 if (speech.Content == RecognitionResultText) return;
                 if (speech.SpeechState != SynthesizerState.Speaking)
                     speech.Speak(RecognitionResultText);
-
             }
             catch (Exception ex)
             {
@@ -425,7 +425,7 @@ namespace FitnessCoach.View
 
                     RecognitionResult result = action.Identification(body.Joints);
 
-                    RecognitionResultText = string.Join(",", result.InfoMessages);
+                    RecognitionResultText = result.InfoMessages;
 
                     #endregion
                 }
