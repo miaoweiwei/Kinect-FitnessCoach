@@ -7,7 +7,6 @@
         mc:Ignorable="d"
         Background="#ff444449"
         Title="动作录制" Height="500" Width="500"
-        Loaded="MainWindow_OnLoaded"
         Closing="MainWindow_OnClosing">
     <Window.Resources>
         <SolidColorBrush x:Key="StartPageColor" Color="#ff444449" />
@@ -39,15 +38,17 @@
         </Menu>
         <ToolBar Grid.Row="1" Name="ModelToolBar" Visibility="Collapsed"
                  Background="{StaticResource LabBtnBackGroundColor}">
-            <Button Name="BtnSave" Content="保存" Foreground="White" PreviewMouseLeftButtonDown="BtnSave_OnPreviewMouseLeftButtonDown"/>
-            <Button Name="BtnSelectJoint" Content="选择对比关节" Foreground="White" PreviewMouseLeftButtonDown="BtnSelectJoint_OnPreviewMouseLeftButtonDown"/>
-            <Button Name="BtnSelectKeyBone" Content="选择关键骨骼" Foreground="White" PreviewMouseLeftButtonDown="BtnSelectKeyBone_OnPreviewMouseLeftButtonDown"/>
-            <Button Name="BtnStartRecording" Content="开始录制" Foreground="White" PreviewMouseLeftButtonDown="BtnStartRecording_OnPreviewMouseLeftButtonDown"/>
+            <Button Name="BtnOk" Content="确定" Foreground="White"
+                    PreviewMouseLeftButtonDown="BtnOk_OnPreviewMouseLeftButtonDown" />
+            <Button Name="BtnCancel" Content="取消" Foreground="White"
+                    PreviewMouseLeftButtonDown="BtnCancel_OnPreviewMouseLeftButtonDown" />
+            <Button Name="BtnRecording" Content="开始记录" Foreground="White" IsEnabled="False"
+                    PreviewMouseLeftButtonDown="BtnRecording_OnPreviewMouseLeftButtonDown" />
         </ToolBar>
 
         <Grid Grid.Row="2">
             <Border Name="StartPageBorder" Background="{StaticResource StartPageColor}">
-                <Grid Name="Grid" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -58,14 +59,14 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Label Grid.Column="0" Name="LabOpenModel" Content="打开模型" FontSize="20" Margin="0 3 3 3"
+                        <Label Grid.Column="0" Name="LabOpenModel" Content="打开模型" FontSize="30" Margin="0 3 3 3"
                                Foreground="{StaticResource LabBtnForegroundColor}"
                                Background="{StaticResource LabBtnBackGroundColor}"
                                BorderThickness="0"
                                MouseEnter="LabBtnModel_OnMouseEnter"
                                MouseLeave="LabBtnModel_OnMouseLeave"
                                PreviewMouseLeftButtonDown="LabBtnOpenModel_OnClick" />
-                        <Label Grid.Column="1" Name="LabNewModel" Content="新建模型" FontSize="20" Margin="3"
+                        <Label Grid.Column="1" Name="LabNewModel" Content="新建模型" FontSize="30" Margin="3"
                                Foreground="{StaticResource LabBtnForegroundColor}"
                                Background="{StaticResource LabBtnBackGroundColor}"
                                BorderThickness="0"
@@ -73,9 +74,9 @@
                                MouseLeave="LabBtnModel_OnMouseLeave"
                                PreviewMouseLeftButtonDown="LabNewModel_OnClick" />
                     </Grid>
-                    <TextBlock Grid.Row="1" Text="最近" FontSize="20" Margin="5" Foreground="White" />
+                    <TextBlock Grid.Row="1" Text="最近" FontSize="30" Margin="5" Foreground="White" />
                     <Grid Grid.Row="2" Margin="5">
-                        <ListBox Name="HistoryRecord"
+                        <ListBox Name="HistoryRecord" FontSize="20"
                                  Background="{StaticResource ListBoxBackGroundColor}"
                                  Foreground="{StaticResource ListBoxForegroundColor}"
                                  BorderThickness="0">
@@ -86,18 +87,144 @@
 
                 </Grid>
             </Border>
+            
+            <Border>
+                <Grid>
+                    <Viewbox Name="TemplateViewBox" Visibility="Collapsed">
+                        <Image Name="BodyTemplateImage" Source="{Binding TemplateImageSource}" Stretch="UniformToFill"
+                               PreviewMouseLeftButtonDown="BodyTemplateImage_OnPreviewMouseLeftButtonDown" />
+                    </Viewbox>
 
-            <Viewbox Name="TemplateViewBox" Visibility="Collapsed">
-                <Image Name="BoneModelImage" Source="{Binding TemplateImageSource}" Stretch="UniformToFill"
-                       PreviewMouseLeftButtonDown="BoneModelImage_OnPreviewMouseLeftButtonDown" />
-            </Viewbox>
+                    <Viewbox Name="BodyViewBox" Visibility="Collapsed">
+                        <!--骨骼图-->
+                        <Image Name="BodyImage" Source="{Binding BodyImageSource}" Stretch="UniformToFill" />
+                    </Viewbox>
+                </Grid>
+            </Border>
 
-            <Viewbox Name="BodyViewBox" Visibility="Collapsed">
-                <!--骨骼图-->
-                <Image Name="BodyImage" Source="{Binding BodyImageSource}" Stretch="UniformToFill" />
-            </Viewbox>
+
+            <Border Name="SavePage" Background="{StaticResource StartPageColor}" Visibility="Collapsed">
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0"
+                           HorizontalContentAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="40"
+                           Foreground="White"
+                           Content="设置动作模型的有关参数" />
+                    <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Row="0" Grid.Column="0" Content="动作的名字：" FontSize="20" Foreground="White" />
+                        <TextBox Name="ActionNameTbx" Grid.Row="0" Grid.Column="1"
+                                 VerticalContentAlignment="Center"
+                                 TextWrapping="NoWrap"
+                                 Background="{StaticResource StartPageColor}"
+                                 FontSize="20" Foreground="White"
+                                 Width="150"
+                                 Text="模型一" />
+                        <Label Grid.Row="1" Grid.Column="0" Content="关键关节角度误差：" FontSize="20" Foreground="White" />
+                        <TextBox Name="AngularErrorTbx" Grid.Row="1" Grid.Column="1"
+                                 VerticalContentAlignment="Center"
+                                 TextWrapping="NoWrap"
+                                 Background="{StaticResource StartPageColor}"
+                                 FontSize="20" Foreground="White"
+                                 Width="150"
+                                 Text="20" />
+                        <Label Grid.Row="2" Grid.Column="0" Content="关键骨骼角度误差：" FontSize="20" Foreground="White" />
+                        <TextBox Name="KeyBoneErrorTbx" Grid.Row="2" Grid.Column="1"
+                                 VerticalContentAlignment="Center"
+                                 TextWrapping="NoWrap"
+                                 Background="{StaticResource StartPageColor}"
+                                 FontSize="20" Foreground="White"
+                                 Width="150"
+                                 Text="20" />
+                        <Label Grid.Row="3" Grid.Column="0" Content="最后帧持续时间：" FontSize="20" Foreground="White" />
+                        <TextBox Name="LastFrameDurationTimeTbx" Grid.Row="3" Grid.Column="1"
+                                 VerticalContentAlignment="Center"
+                                 TextWrapping="NoWrap"
+                                 Background="{StaticResource StartPageColor}"
+                                 FontSize="20" Foreground="White"
+                                 Width="150"
+                                 Text="5" />
+                    </Grid>
+                    <Grid Grid.Row="2" HorizontalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Label Name="LabBtnOk" Grid.Column="0"
+                               Margin="0 0 20 0"
+                               FontSize="30"
+                               Content="确定"
+                               Background="{StaticResource LabBtnBackGroundColor}"
+                               Foreground="White"
+                               MouseEnter="LabBtnModel_OnMouseEnter"
+                               MouseLeave="LabBtnModel_OnMouseLeave"
+                               PreviewMouseLeftButtonDown="LabBtnOk_OnPreviewMouseLeftButtonDown" />
+                        <Label Name="LabBtnCancel" Grid.Column="1"
+                               Margin="20 0 0 0"
+                               FontSize="30"
+                               Content="取消"
+                               Background="{StaticResource LabBtnBackGroundColor}"
+                               Foreground="White"
+                               MouseEnter="LabBtnModel_OnMouseEnter"
+                               MouseLeave="LabBtnModel_OnMouseLeave"
+                               PreviewMouseLeftButtonDown="LabBtnCancel_OnPreviewMouseLeftButtonDown" />
+                    </Grid>
+                </Grid>
+            </Border>
+            <Border Name="SaveResultPage" Background="{StaticResource StartPageColor}" Visibility="Collapsed">
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0"
+                           HorizontalContentAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="40"
+                           Foreground="White"
+                           Content="保存成功" />
+                    <Grid Grid.Row="1" HorizontalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Label Name="LabBtnBackStartPage" Grid.Column="0"
+                               Margin="0 0 20 0"
+                               FontSize="30"
+                               Content="返回首页"
+                               Background="{StaticResource LabBtnBackGroundColor}"
+                               Foreground="White"
+                               MouseEnter="LabBtnModel_OnMouseEnter"
+                               MouseLeave="LabBtnModel_OnMouseLeave"
+                               PreviewMouseLeftButtonDown="LabBtnBackStartPage_OnPreviewMouseLeftButtonDown" />
+                        <Label Name="LabBtnExit" Grid.Column="1"
+                               Margin="20 0 0 0"
+                               FontSize="30"
+                               Content="退出程序"
+                               Background="{StaticResource LabBtnBackGroundColor}"
+                               Foreground="White"
+                               MouseEnter="LabBtnModel_OnMouseEnter"
+                               MouseLeave="LabBtnModel_OnMouseLeave"
+                               PreviewMouseLeftButtonDown="LabBtnExit_OnPreviewMouseLeftButtonDown" />
+                    </Grid>
+                </Grid>
+            </Border>
         </Grid>
-
         <StatusBar Name="AppStatusBar" Grid.Row="3" Visibility="Collapsed">
             <StatusBar.ItemsPanel>
                 <ItemsPanelTemplate>

@@ -82,7 +82,7 @@ namespace FitnessCoach.Core
             result = new RecognitionResult()
             {
                 AttitudeName = this.AttitudeName,
-                InfoMessages = new List<string>()
+                InfoMessages = "",
             };
             if (JointAngles != null && JointAngles.Count > 0)
             {
@@ -92,8 +92,8 @@ namespace FitnessCoach.Core
                     if (Math.Abs(jointAngle.Angle - jointAngleList.First(o => o.Name == jointAngle.Name).Angle) >
                         allowableAngularError)
                     {
-                        result.InfoMessages.Add(
-                            $"请使{BoneNode.SkeletonDictionary.GetJointNameDic()[jointAngle.Name]}活动到{jointAngle.Angle}度");
+                        result.InfoMessages =
+                            $"请使{BoneNode.SkeletonDictionary.GetJointNameDic()[jointAngle.Name]}活动到{jointAngle.Angle}度";
                         return false;
                     }
             }
@@ -113,6 +113,7 @@ namespace FitnessCoach.Core
                 if (Math.Abs(keyBone.AngleZ - key.AngleZ) > allowableKeyBoneError)
                     return false;
             }
+
             this.IsCompared = true;
             return this.IsCompared;
         }

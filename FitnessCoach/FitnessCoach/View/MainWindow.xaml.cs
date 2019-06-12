@@ -4,9 +4,11 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Speech.Synthesis;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FitnessCoach.BoneNode;
@@ -14,6 +16,8 @@ using FitnessCoach.Config;
 using FitnessCoach.Core;
 using FitnessCoach.Util;
 using Microsoft.Kinect;
+using Microsoft.Win32;
+using Timer = System.Windows.Forms.Timer;
 
 namespace FitnessCoach.View
 {
@@ -26,6 +30,8 @@ namespace FitnessCoach.View
 
         private bool _isRecognition;
         private AttitudeRecognition attitudeRecognition;
+
+        private Timer timer;
 
         #endregion
 
@@ -98,15 +104,6 @@ namespace FitnessCoach.View
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public MainWindow()
-        {
-            string path = Environment.CurrentDirectory;
-            InitializeComponent();
-            InitUi();
-            InitKinect();
-            this.DataContext = this;
-        }
-
         /// <summary>
         /// 绘制骨骼图
         /// </summary>
@@ -153,46 +150,25 @@ namespace FitnessCoach.View
             }
         }
 
-        private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
+        public MainWindow()
         {
-            if (this.bodyFrameReader != null)
-                this.bodyFrameReader.FrameArrived += BodyFrameReader_FrameArrived;
-
-            if (this.colorFrameReader != null)
-                this.colorFrameReader.FrameArrived += ColorFrameReader_FrameArrived;
+            string path = Environment.CurrentDirectory;
+            InitializeComponent();
+            InitUi();
+            InitKinect();
+            this.DataContext = this;
         }
-
-        private void MainWindow_OnClosing(object sender, CancelEventArgs e)
-        {
-            if (this.bodyFrameReader != null)
-            {
-                this.bodyFrameReader.Dispose();
-                this.bodyFrameReader = null;
-            }
-
-            if (this.colorFrameReader != null)
-            {
-                this.colorFrameReader.Dispose();
-                this.colorFrameReader = null;
-            }
-
-            if (this.kinectSensor == null) return;
-            this.kinectSensor.Close();
-            this.kinectSensor = null;
-            GC.Collect();
-        }
-
 
         private void InitUi()
         {
             this.drawingGroup = new DrawingGroup();
             this._bodyBodyImageSource = new DrawingImage(drawingGroup);
+            SelectModelDir(GlobalConfig.ActionModelDirPath);
         }
 
         private void InitKinect()
         {
             this.kinectSensor = GlobalConfig.Sensor;
-            this.kinectSensor.IsAvailableChanged += KinectSensor_IsAvailableChanged;
             //获取坐标映射器
             this.coordinateMapper = this.kinectSensor.CoordinateMapper;
             FrameDescription frameDescription = this.kinectSensor.ColorFrameSource.FrameDescription; //获取彩色图的分辨率
@@ -213,10 +189,38 @@ namespace FitnessCoach.View
             // 创建要显示的位图
             this._colorBitmapSource = new WriteableBitmap(colorFrameDescription.Width, colorFrameDescription.Height,
                 96.0, 96.0, PixelFormats.Bgr32, null);
-
-            this.kinectSensor.Open();
-
             this.StatusText = "Kinect不可用!";
+        }
+
+        private void KinectEventBind()
+        {
+            kinectSensor.IsAvailableChanged += KinectSensor_IsAvailableChanged;
+            if (bodyFrameReader != null)
+                bodyFrameReader.FrameArrived += BodyFrameReader_FrameArrived;
+            if (this.colorFrameReader != null)
+                this.colorFrameReader.FrameArrived += ColorFrameReader_FrameArrived;
+        }
+
+        private void KinectEventCancelBind()
+        {
+            kinectSensor.IsAvailableChanged -= KinectSensor_IsAvailableChanged;
+            if (bodyFrameReader != null)
+                bodyFrameReader.FrameArrived -= BodyFrameReader_FrameArrived;
+
+            if (this.colorFrameReader != null)
+                this.colorFrameReader.FrameArrived -= ColorFrameReader_FrameArrived;
+        }
+
+        private void MainWindow_OnClosing(object sender, CancelEventArgs e)
+        {
+            KinectEventCancelBind();
+            this.bodyFrameReader?.Dispose();
+            this.bodyFrameReader = null;
+            this.colorFrameReader?.Dispose();
+            this.colorFrameReader = null;
+            this.kinectSensor?.Close();
+            this.kinectSensor = null;
+            GC.Collect();
         }
 
         private void BodyFrameReader_FrameArrived(object sender, BodyFrameArrivedEventArgs e)
@@ -285,6 +289,77 @@ namespace FitnessCoach.View
                 : "Kinect不可用!";
         }
 
+        private void LabBtnModel_OnMouseEnter(object sender, MouseEventArgs e)
+        {
+            ((Control) sender).Background = Resources["SelectedBackGroundColor"] as Brush;
+        }
+
+        private void LabBtnModel_OnMouseLeave(object sender, MouseEventArgs e)
+        {
+            ((Control) sender).Background = Resources["LabBtnBackGroundColor"] as Brush;
+        }
+
+        /// <summary>
+        /// 切换显示图层
+        /// </summary>
+        private void SwitchShowGrid(params UIElement[] elements)
+        {
+            StartPage.Visibility = Visibility.Collapsed;
+            ModelPage.Visibility = Visibility.Collapsed;
+            MenuBox.Visibility = Visibility.Collapsed;
+            foreach (UIElement element in elements)
+            {
+                element.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void MenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            SwitchShowGrid(StartPage);
+            KinectEventCancelBind();
+            kinectSensor.Close();
+        }
+
+        private void LabSelectModelDir_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            using (System.Windows.Forms.FolderBrowserDialog folder = new System.Windows.Forms.FolderBrowserDialog())
+            {
+                folder.Description = "选择动作模型文件夹";
+                folder.ShowNewFolderButton = false;
+                folder.SelectedPath = AppDomain.CurrentDomain.BaseDirectory;
+                if (folder.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    SelectModelDir(folder.SelectedPath);
+            }
+        }
+
+        private void SelectModelDir(string modelDir)
+        {
+            GlobalConfig.ActionModelDirPath = modelDir;
+            ModelDirPathTbx.Text = GlobalConfig.ActionModelDirPath;
+            ActionRecognition action = ActionRecognition.GetActionRecognition();
+            action.ModeFilePathList.Clear();
+            action.LoadModelDir(GlobalConfig.ActionModelDirPath);
+            ModelListView.Items.Clear();
+            foreach (string path in action.ModeFilePathList)
+            {
+                string fileStr = Path.GetFileName(path);
+                string file = fileStr.Substring(0, fileStr.LastIndexOf('.'));
+                ListViewItem item = new ListViewItem {Content = file, Tag = path};
+                ModelListView.Items.Add(item);
+            }
+        }
+
+        private void ModelListBox_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            ListViewItem item = e.Source as ListViewItem;
+            if (item == null) return;
+            ActionRecognition action = ActionRecognition.GetActionRecognition();
+            action.LoadModelFromFile(item.Tag.ToString());
+
+            KinectEventBind();
+            kinectSensor.Open();
+            SwitchShowGrid(ModelPage, MenuBox);
+        }
 
         private void BtnStartRecording_OnClick(object sender, RoutedEventArgs e)
         {
@@ -292,8 +367,36 @@ namespace FitnessCoach.View
             BtnStartRecording.Content = _isRecognition ? "停止姿态识别" : "姿态识别";
             StatusText = _isRecognition ? "正在识别中..." : "未进行识别";
             if (attitudeRecognition == null)
-            {
                 attitudeRecognition = AttitudeRecognition.GetAttitudeRecognition();
+            if (timer == null)
+            {
+                timer = new Timer {Interval = 1000};
+                timer.Tick += Timer_Tick;
+            }
+
+            if (_isRecognition)
+                timer.Start();
+            else
+                timer.Stop();
+        }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            timer.Enabled = false;
+            try
+            {
+                SpeechHelp speech = SpeechHelp.GetInstance();
+                if (speech.Content == RecognitionResultText) return;
+                if (speech.SpeechState != SynthesizerState.Speaking)
+                    speech.Speak(RecognitionResultText);
+            }
+            catch (Exception ex)
+            {
+                LogUtil.Error(this, ex);
+            }
+            finally
+            {
+                timer.Enabled = true;
             }
         }
 
@@ -304,14 +407,27 @@ namespace FitnessCoach.View
             {
                 if (body.IsTracked)
                 {
-                    List<RecognitionResult> resList = attitudeRecognition.Identification(body.Joints);
-                    string resultStr = "";
-                    foreach (RecognitionResult result in resList)
-                        resultStr += $"姿态：{result.AttitudeName};提示信息：{string.Join(",", result.InfoMessages)}\r";
+                    #region 姿态
 
-                    RecognitionResultText = !string.IsNullOrEmpty(resultStr)
-                        ? resultStr
-                        : resultStr.Remove(resultStr.Length - 1);
+                    //List<RecognitionResult> resList = attitudeRecognition.Identification(body.Joints);
+                    //string resultStr = "";
+                    //foreach (RecognitionResult result in resList)
+                    //    resultStr += $"姿态：{result.AttitudeName};提示信息：{string.Join(",", result.InfoMessages)}\r";
+                    //RecognitionResultText = !string.IsNullOrEmpty(resultStr)
+                    //    ? resultStr
+                    //    : resultStr.Remove(resultStr.Length - 1);
+
+                    #endregion
+
+                    #region 动作识别
+
+                    ActionRecognition action = ActionRecognition.GetActionRecognition();
+
+                    RecognitionResult result = action.Identification(body.Joints);
+
+                    RecognitionResultText = result.InfoMessages;
+
+                    #endregion
                 }
             }
         }

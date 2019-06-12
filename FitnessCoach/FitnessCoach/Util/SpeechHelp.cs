@@ -45,6 +45,8 @@ namespace FitnessCoach.Util
             get { return _speech.State; }
         }
 
+        public string Content { get; set; }
+
         #region 单例
 
         private static SpeechHelp _instance = null;
@@ -114,9 +116,10 @@ namespace FitnessCoach.Util
         /// 朗读，异步的时候触发朗读完成，同步的时候不触发
         /// </summary>
         /// <param name="textToSpeak"></param>
-        /// <param name="isAsync"></param>
-        public void Speak(string textToSpeak, bool isAsync = false)
+        /// <param name="isAsync">是否异步朗读默认异步朗读</param>
+        public void Speak(string textToSpeak, bool isAsync = true)
         {
+            Content = textToSpeak;
             if (isAsync)
             {
                 //朗读之前取消之前没有朗读完或者没有朗读的队列

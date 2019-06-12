@@ -14,6 +14,7 @@ using FitnessCoach.BoneNode;
 using FitnessCoach.Core;
 using FitnessCoach.Util;
 using Microsoft.Kinect;
+using Newtonsoft.Json;
 
 namespace TestWinForm
 {
@@ -62,31 +63,13 @@ namespace TestWinForm
                 },
             };
             string serializationStr = XmlUtil.Serializer(bodyJoint);
-
-
+            
             ActionModel action = new ActionModel()
             {
                 ActionName = "抬手",
-                ActionFrameList = new List<ActionFrame>()
-                {
-                   new ActionFrame(){Nmae = "抬手",Joints = new Dictionary<JointType, Joint>()
-                   {
-                       {JointType.Head,new Joint(){JointType = JointType.Head,Position = new CameraSpacePoint(){X = 10,Y=100}} },
-                       {JointType.Neck,new Joint(){JointType = JointType.Neck,Position = new CameraSpacePoint(){X = 10,Y=120}} },
-                       {JointType.ShoulderLeft,new Joint(){JointType = JointType.ShoulderLeft,Position = new CameraSpacePoint(){X = 10,Y=150}} },
-                       {JointType.SpineMid,new Joint(){JointType = JointType.SpineMid,Position = new CameraSpacePoint(){X = 10,Y=180}} },
-                   }},
-                   new ActionFrame(){Nmae = "踢腿",Joints = new Dictionary<JointType, Joint>()
-                   {
-                       {JointType.Head,new Joint(){JointType = JointType.Head,Position = new CameraSpacePoint(){X = 10,Y=100}} },
-                       {JointType.Neck,new Joint(){JointType = JointType.Neck,Position = new CameraSpacePoint(){X = 10,Y=120}} },
-                       {JointType.ShoulderLeft,new Joint(){JointType = JointType.ShoulderLeft,Position = new CameraSpacePoint(){X = 10,Y=150}} },
-                       {JointType.SpineMid,new Joint(){JointType = JointType.SpineMid,Position = new CameraSpacePoint(){X = 10,Y=180}} },
-                   }}
-                }
             };
-            serializationStr = XmlUtil.Serializer(action);
-
+            serializationStr = JsonConvert.SerializeObject(action,Formatting.Indented);
+            ActionModel actionModel = JsonConvert.DeserializeObject<ActionModel>(serializationStr);
             //action.KeyFrameAttitudeModelList = new List<AttitudeModel>(){ bodyJoint };
 
             AttitudeModel obj = XmlUtil.Deserialize<AttitudeModel>(serializationStr);

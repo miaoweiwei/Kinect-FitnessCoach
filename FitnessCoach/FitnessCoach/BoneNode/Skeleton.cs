@@ -66,8 +66,10 @@ namespace FitnessCoach.BoneNode
             Brushes.Indigo,
             Brushes.Violet,
         };
+
         private Pen _joinDefaultPen = new Pen(Brushes.Aqua, 1);
         private Pen _joinSelectPen = new Pen(Brushes.Yellow, 1);
+
         public Skeleton(int displayWidth, int displayHeight, CoordinateMapper coordinateMapper)
         {
             this.DisplayWidth = displayWidth;
@@ -128,10 +130,37 @@ namespace FitnessCoach.BoneNode
                     joints3[bondVectorTuple2.Item1].Position);
 
                 float angle = VectorHelp.GetVectorAngle(vector1, vector2);
+                //angle = (float) Math.Round(angle, 2);
+                
                 jointAngles.Add(new JointAngle(pair.Key, angle));
             }
 
             return jointAngles;
+        }
+
+        /// <summary>
+        /// 三维空间里的坐标转换
+        /// </summary>
+        /// <param name="bodyJoints"></param>
+        /// <param name="jointType">指定原点坐标类型</param>
+        /// <returns></returns>
+        public static Dictionary<JointType, Joint> CoordinateTransformation3D(
+            IReadOnlyDictionary<JointType, Joint> bodyJoints, JointType jointType)
+        {
+            CameraSpacePoint origin = bodyJoints[jointType].Position;
+            Dictionary<JointType, Joint> joints3 = new Dictionary<JointType, Joint>();
+            foreach (KeyValuePair<JointType, Joint> pair in bodyJoints)
+            {
+                joints3[pair.Key] = new Joint()
+                {
+                    JointType = pair.Value.JointType,
+                    TrackingState = pair.Value.TrackingState,
+                    //变换指定原点坐标，以JointType.SpineMid为坐标原点
+                    Position = VectorHelp.GetSubtract(pair.Value.Position, origin),
+                };
+            }
+
+            return joints3;
         }
 
         /// <summary>
@@ -162,31 +191,29 @@ namespace FitnessCoach.BoneNode
             //var bodyJointOrientations = body.JointOrientations;
             CameraSpacePoint positionSpineMid = bodyJoints[JointType.SpineMid].Position;
             double num = positionSpineMid.Z;
+            double thickness = BonePenMaxSize / num;
             //设置骨骼的画笔
-            Pen boneDrawPen = new Pen(this.BodyBrushes[bodyIndex], this.BonePenMaxSize / num);
-
+            Pen boneDrawPen = new Pen(this.BodyBrushes[bodyIndex], thickness);
             //将关节点转换为2D深度（显示）空间
             Dictionary<JointType, Joint2D> joints2 = JointToJoint2Ds(bodyJoints);
-            // 指定 JointType.SpineMid 为坐标原点的三维空间坐标
-            Dictionary<JointType, Joint> joints3 = new Dictionary<JointType, Joint>();
-            foreach (KeyValuePair<JointType, Joint> pair in bodyJoints)
-            {
-                joints3[pair.Key] = new Joint()
-                {
-                    JointType = pair.Value.JointType,
-                    TrackingState = pair.Value.TrackingState,
-                    //变换指定原点坐标，以JointType.SpineMid为坐标原点
-                    Position = VectorHelp.GetSubtract(pair.Value.Position, positionSpineMid),
-                };
-            }
 
-            DrawJointCircle(dc, joints2, null, _joinDefaultPen, _joinSelectPen);
-
-            List<Joint2D> jointList = joints2.Values.ToList();
-            string str = XmlUtil.Serializer(jointList);
+            //List<Joint2D> jointList = joints2.Values.ToList();
+            //string str = XmlUtil.Serializer(jointList);
 
             this.DrawBody(joints2, dc, boneDrawPen);
-            this.DrawBoneAngle(joints3, joints2, dc, Brushes.White);
+
+            // 指定 JointType.SpineMid 为坐标原点的三维空间坐标
+            Dictionary<JointType, Joint> joints3 = CoordinateTransformation3D(bodyJoints, JointType.SpineMid);
+            ControlCommand command = ControlCommand.GetControlCommand();
+            command.SwitchLeader(body);
+            command.HandClosedEvent(body);
+            if (command.LeaderId == body.TrackingId)
+            {
+                dc.DrawEllipse(Brushes.White, new Pen(Brushes.Yellow, 2), joints2[JointType.Head].Position, 10,
+                    10);
+                this.DrawBoneAngle(joints3, joints2, dc, Brushes.White);
+            }
+
             ////TODO 显示手
             //Size s = new Size(Resources.hand.Width, Resources.hand.Height);
             //Point p = new Point(joints2[JointType.WristRight].Position.X - s.Width / 2,
@@ -196,7 +223,14 @@ namespace FitnessCoach.BoneNode
             //dc.DrawImage(image, r);
         }
 
-        public Dictionary<JointType, Joint2D> JointToJoint2Ds(IReadOnlyDictionary<JointType, Joint> bodyJoints)
+        /// <summary>
+        ///把相机空间里的点映射到指定的彩色或深度空间
+        /// </summary>
+        /// <param name="bodyJoints"></param>
+        /// <param name="isMapColor"></param>
+        /// <returns></returns>
+        public Dictionary<JointType, Joint2D> JointToJoint2Ds(IReadOnlyDictionary<JointType, Joint> bodyJoints,
+            bool isMapColor = true)
         {
             //将关节点转换为2D深度（显示）空间
             Dictionary<JointType, Joint2D> joints2 = new Dictionary<JointType, Joint2D>();
@@ -206,14 +240,20 @@ namespace FitnessCoach.BoneNode
                 CameraSpacePoint position = pair.Value.Position;
                 if (position.Z < 0) //深度为负值时
                     position.Z = InferredZPositionClamp;
-                //ColorSpacePoint colorSpacePoint = CoordinateMapper.MapCameraPointToColorSpace(position);
-                //将相机点映射到2D深度空间
-                DepthSpacePoint depthSpacePoint = this.CoordinateMapper.MapCameraPointToDepthSpace(position);
+                // 将点从相机空间映射到颜色空间。
+                ColorSpacePoint colorSpacePoint = CoordinateMapper.MapCameraPointToColorSpace(position);
+                // 将点从相机空间映射到深度空间。
+                DepthSpacePoint depthSpacePoint = CoordinateMapper.MapCameraPointToDepthSpace(position);
+                Point point = new Point
+                {
+                    X = isMapColor ? colorSpacePoint.X : depthSpacePoint.X,
+                    Y = isMapColor ? colorSpacePoint.Y : depthSpacePoint.Y
+                };
+
                 joints2[pair.Key] = new Joint2D()
                 {
                     Joint2DType = pair.Key,
-                    //Position = new Point(colorSpacePoint.X, colorSpacePoint.Y),
-                    Position = new Point(depthSpacePoint.X, depthSpacePoint.Y),
+                    Position = point,
                     TrackingState = pair.Value.TrackingState
                 };
             }
@@ -221,16 +261,17 @@ namespace FitnessCoach.BoneNode
             return joints2;
         }
 
-        public void DrawJointCircle(DrawingContext dc,Dictionary<JointType, Joint2D> joints2, List<JointType> selectJoint,
-            Pen joinDefaultPen, Pen joinSelectPen)
+        public void DrawJointCircle(DrawingContext dc, Dictionary<JointType, Joint2D> joints2,
+            List<JointType> selectJoint, Pen joinDefaultPen, Pen joinSelectPen, double defaultRadius,
+            double selectRadius)
         {
             foreach (KeyValuePair<JointType, Joint2D> pair in joints2)
             {
                 if (selectJoint != null && selectJoint.Contains(pair.Key)) //选中的关节
-                    dc.DrawEllipse(joinSelectPen.Brush, joinSelectPen, pair.Value.Position, 5, 5);
+                    dc.DrawEllipse(joinSelectPen.Brush, joinSelectPen, pair.Value.Position, selectRadius, selectRadius);
                 else //没有选中的关节
-                    dc.DrawEllipse(joinDefaultPen.Brush, joinDefaultPen, pair.Value.Position, 4, 4);
-
+                    dc.DrawEllipse(joinDefaultPen.Brush, joinDefaultPen, pair.Value.Position, defaultRadius,
+                        defaultRadius);
             }
         }
 

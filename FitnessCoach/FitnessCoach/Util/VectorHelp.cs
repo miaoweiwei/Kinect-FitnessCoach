@@ -11,7 +11,7 @@ namespace FitnessCoach.Util
     /// 三维向量(用 <see cref="CameraSpacePoint"/> 表示三维向量的类型)帮助类，
     /// 进行向量之间的计算
     /// </summary>
-    internal class VectorHelp
+    internal static class VectorHelp
     {
         /// <summary>
         /// 获取两个三维的点组成的向量,
@@ -96,6 +96,18 @@ namespace FitnessCoach.Util
             }
 
             return unitVector;
+        }
+
+        /// <summary> 获取两点之间的距离 </summary>
+        public static double GetDistance(CameraSpacePoint a, CameraSpacePoint b)
+        {
+            var array = new double[]
+            {
+                b.X - a.X,
+                b.Y - a.Y,
+                b.Z - a.Z
+            };
+            return Math.Sqrt(array[0] * array[0] + array[1] * array[1] + array[2] * array[2]);
         }
     }
 }

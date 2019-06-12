@@ -19,6 +19,6 @@ namespace FitnessCoach.Core
         /// <summary>
         /// 姿态的识别提示信息
         /// </summary>
-        public List<string> InfoMessages;
+        public string InfoMessages;
     }
 }

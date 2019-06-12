@@ -24,6 +24,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>true</Prefer32Bit>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -45,6 +46,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Speech" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -75,6 +77,8 @@
     <Compile Include="BoneNode\Bone.cs" />
     <Compile Include="Config\GlobalConfig.cs" />
     <Compile Include="Core\RecognitionResult.cs" />
+    <Compile Include="Util\ControlCommand.cs" />
+    <Compile Include="Util\LogUtil.cs" />
     <Compile Include="Util\SystemSleepManagement.cs" />
     <Compile Include="Util\Tools.cs" />
     <Compile Include="Util\XmlUtil.cs" />
@@ -115,6 +119,8 @@
     <None Include="Model\Template.model">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Model\右手臂上抬.actionmodel" />
+    <None Include="Model\左手臂上抬.actionmodel" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -125,7 +131,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Model\RaiseLeftHand.model">
+    <None Include="Model\RaiseLeftHand_Attitude.model">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </None>
