@@ -27,10 +27,12 @@
             <Menu Name="MenuBox" Grid.Row="0" Visibility="Collapsed"
                   Background="{StaticResource StartPageColor}"
                   Foreground="White">
-                <MenuItem Header="起始页" Click="MenuItem_OnClick" />
+                <MenuItem Header="起始页" Name="StartPageMenuItem" Click="StartPageMenuItem_OnClick" />
+                <MenuItem Header="播放模型" Name="ModelPlayMenuItem" Click="ModelPlayMenuItem_OnClick" />
+                <MenuItem Header="姿态识别" Name="BtnStartRecordingMenuItem" Click="BtnStartRecordingMenuItem_OnClick" />
             </Menu>
             <Grid Grid.Row="1">
-                <Grid Name="StartPage" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
+                <Grid Name="StartPage" VerticalAlignment="Center" HorizontalAlignment="Center">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -83,44 +85,28 @@
                               PreviewMouseLeftButtonDown="ModelListBox_OnPreviewMouseLeftButtonDown" />
                 </Grid>
                 <Grid Name="ModelPage" Margin="10 0 10 0" Visibility="Collapsed">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Margin="0 0 0 0" HorizontalAlignment="Left" Text="Kinect" />
-                    <TextBlock Grid.Row="0" Margin="0 0 0 0" HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                               FontFamily="Segoe UI" FontSize="18" Text="骨骼图" />
-                    <TextBlock Name="FrameRateTbx" Grid.Row="0" Margin="0 0 0 0" HorizontalAlignment="Right"
-                               Text="0fps" />
-
-                    <Viewbox Grid.Row="1" HorizontalAlignment="Center" Opacity="1" VerticalAlignment="Center">
+                    <Viewbox HorizontalAlignment="Center" Opacity="1" VerticalAlignment="Center">
                         <Image Source="{Binding ColorBitmapSource}" Stretch="UniformToFill" />
                     </Viewbox>
-                    <Viewbox Grid.Row="1" HorizontalAlignment="Center" Opacity="1" VerticalAlignment="Center">
+                    <Viewbox HorizontalAlignment="Center" Opacity="1" VerticalAlignment="Center">
                         <Image Source="{Binding BodyImageSource}" Stretch="UniformToFill" />
                     </Viewbox>
-                    <Grid Grid.Row="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StatusBar Name="InfoStatusBar" Grid.Column="0" HorizontalAlignment="Stretch"
-                                   VerticalAlignment="Bottom"
-                                   Background="{StaticResource StartPageColor}" Foreground="White">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <StatusBarItem Grid.Row="0" Content="{Binding StatusText}" FontSize="20" />
-                                <StatusBarItem Grid.Row="1" Content="{Binding RecognitionResultText}" FontSize="20" />
-                            </Grid>
-                        </StatusBar>
-                        <Button Grid.Column="1" Name="BtnStartRecording" Content="姿态识别" HorizontalAlignment="Right"
-                                VerticalAlignment="Bottom"
-                                Margin="3 3 3 3" Click="BtnStartRecording_OnClick" />
-                    </Grid>
+                    <Viewbox Name="ModelViewBox"
+                             HorizontalAlignment="Center" Opacity="1" VerticalAlignment="Center">
+                        <Image Name="ModelImage" Source="{Binding ModelImageSource}" Stretch="UniformToFill" />
+                    </Viewbox>
+                    <StatusBar Name="InfoStatusBar" Grid.Column="0" HorizontalAlignment="Stretch"
+                               VerticalAlignment="Bottom"
+                               Background="{StaticResource StartPageColor}" Foreground="White">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <StatusBarItem Grid.Row="0" Content="{Binding StatusText}" FontSize="20" />
+                            <StatusBarItem Grid.Row="1" Content="{Binding RecognitionResultText}" FontSize="20" />
+                        </Grid>
+                    </StatusBar>
                 </Grid>
             </Grid>
         </Grid>

@@ -131,7 +131,7 @@ namespace FitnessCoach.BoneNode
 
                 float angle = VectorHelp.GetVectorAngle(vector1, vector2);
                 //angle = (float) Math.Round(angle, 2);
-                
+
                 jointAngles.Add(new JointAngle(pair.Key, angle));
             }
 
@@ -161,6 +161,17 @@ namespace FitnessCoach.BoneNode
             }
 
             return joints3;
+        }
+
+        public static Dictionary<JointType, Joint2D> Joint2DTransformSize(Dictionary<JointType, Joint2D> joint2Ds, double originalW,double originalH, double w, double h)
+        {
+            foreach (KeyValuePair<JointType, Joint2D> pair in joint2Ds)
+            {
+                pair.Value.Position.X = pair.Value.Position.X / originalW * w;
+                pair.Value.Position.Y = pair.Value.Position.Y / originalH * h;
+            }
+
+            return joint2Ds;
         }
 
         /// <summary>

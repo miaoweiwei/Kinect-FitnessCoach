@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Speech.Synthesis;
+using System.Threading;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,6 +18,7 @@ using FitnessCoach.Core;
 using FitnessCoach.Util;
 using Microsoft.Kinect;
 using Microsoft.Win32;
+using ThreadState = System.Threading.ThreadState;
 using Timer = System.Windows.Forms.Timer;
 
 namespace FitnessCoach.View
@@ -32,6 +34,7 @@ namespace FitnessCoach.View
         private AttitudeRecognition attitudeRecognition;
 
         private Timer timer;
+        private Thread modelPlayTh;
 
         #endregion
 
@@ -51,6 +54,14 @@ namespace FitnessCoach.View
         /// 显示彩色图像
         /// </summary>
         private WriteableBitmap _colorBitmapSource = null;
+
+        private DrawingGroup drawingModelGroup;
+        private DrawingImage _modelImageSource;
+
+        public DrawingImage ModelImageSource
+        {
+            get => _modelImageSource;
+        }
 
         /// <summary>
         /// 用于状态栏的显示
@@ -163,6 +174,10 @@ namespace FitnessCoach.View
         {
             this.drawingGroup = new DrawingGroup();
             this._bodyBodyImageSource = new DrawingImage(drawingGroup);
+
+            this.drawingModelGroup = new DrawingGroup();
+            _modelImageSource = new DrawingImage(drawingModelGroup);
+
             SelectModelDir(GlobalConfig.ActionModelDirPath);
         }
 
@@ -313,7 +328,7 @@ namespace FitnessCoach.View
             }
         }
 
-        private void MenuItem_OnClick(object sender, RoutedEventArgs e)
+        private void StartPageMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
             SwitchShowGrid(StartPage);
             KinectEventCancelBind();
@@ -361,10 +376,10 @@ namespace FitnessCoach.View
             SwitchShowGrid(ModelPage, MenuBox);
         }
 
-        private void BtnStartRecording_OnClick(object sender, RoutedEventArgs e)
+        private void BtnStartRecordingMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
             _isRecognition = !_isRecognition;
-            BtnStartRecording.Content = _isRecognition ? "停止姿态识别" : "姿态识别";
+            BtnStartRecordingMenuItem.Header = _isRecognition ? "停止姿态识别" : "姿态识别";
             StatusText = _isRecognition ? "正在识别中..." : "未进行识别";
             if (attitudeRecognition == null)
                 attitudeRecognition = AttitudeRecognition.GetAttitudeRecognition();
@@ -402,7 +417,6 @@ namespace FitnessCoach.View
 
         private void RecordJointAngle(Body[] bodies)
         {
-            //TODO 录制骨骼信息用于模型的识别
             foreach (Body body in bodies)
             {
                 if (body.IsTracked)
@@ -422,13 +436,51 @@ namespace FitnessCoach.View
                     #region 动作识别
 
                     ActionRecognition action = ActionRecognition.GetActionRecognition();
-
                     RecognitionResult result = action.Identification(body.Joints);
-
                     RecognitionResultText = result.InfoMessages;
 
                     #endregion
                 }
+            }
+        }
+
+        private void ModelPlayMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (modelPlayTh == null || modelPlayTh.ThreadState==ThreadState.Stopped)
+            {
+                modelPlayTh = new Thread(ModelPlayThread);
+                modelPlayTh.IsBackground = true;
+            }
+            modelPlayTh.Start();
+            ModelPlayMenuItem.IsEnabled = false;
+        }
+
+        private void ModelPlayThread()
+        {
+            ActionRecognition action = ActionRecognition.GetActionRecognition();
+            for (int i = 0; i < action.Model.ActionFrames.Count; i++)
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    using (DrawingContext dc = drawingModelGroup.Open())
+                    {
+                        Rect r = new Rect(0.0, 0.0, displayWidth, displayHeight);
+                        dc.DrawRectangle(
+                            new SolidColorBrush(Color.FromArgb(0, byte.MaxValue, byte.MaxValue, byte.MaxValue)), null,
+                            r);
+                        Dictionary<JointType, Joint> joints3 = action.Model.ActionFrames[i].Joints
+                            .ToDictionary(o => o.JointType, value => value);
+                        //将关节点转换为2D深度（显示）空间
+                        Dictionary<JointType, Joint2D> joints2 = skeleton.JointToJoint2Ds(joints3);
+                        joints2 = Skeleton.Joint2DTransformSize(joints2, 1920, 1080, 500, 400);
+                        skeleton.DrawBody(joints2, dc, new Pen(Brushes.Yellow, 5));
+                        this.drawingGroup.ClipGeometry = new RectangleGeometry(r);
+                    }
+
+                    if (i == action.Model.ActionFrames.Count - 1)
+                        ModelPlayMenuItem.IsEnabled = true;
+                }));
+                Thread.Sleep(35);
             }
         }
     }
